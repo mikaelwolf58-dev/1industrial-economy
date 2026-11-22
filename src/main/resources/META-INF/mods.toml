@@ -1,0 +1,25 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+
+[[mods]]
+modId="industrial_economy"
+version="1.0.0"
+displayName="Industrial Economy"
+description='''
+Промышленно-экономическая песочница для Minecraft Create.
+'''
+
+[[dependencies.industrial_economy]]
+    modId="forge"
+    mandatory=true
+    versionRange="[47,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.industrial_economy]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.20.1,1.21)"
+    ordering="NONE"
+    side="BOTH"

@@ -1,0 +1,15 @@
+At line:1 char:434
++ ...            all { ArtifactRepository repo -'                if (repo i ...
++                                                                ~~
+Unexpected token 'if' in expression or statement.
+At line:1 char:479
++ ... ry repo -'                if (repo instanceof MavenArtifactRepository
++                                                                            ~
+Missing closing ')' after expression in 'if' statement.
+At line:1 char:479
++ ... ry repo -'                if (repo instanceof MavenArtifactRepository
++                                                                            ~
+Missing closing ')' in subexpression.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : UnexpectedToken
+ 
