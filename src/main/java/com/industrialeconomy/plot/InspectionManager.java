@@ -1,5 +1,5 @@
 package com.industrialeconomy.plot;
-import com.industrialeconomy.economy.RecipeBlocker;
+import com.industrialeconomy.economy.*;
 import com.industrialeconomy.event.FinanceEvents;
 import com.industrialeconomy.finance.PlayerFinanceProvider;
 import net.minecraft.ChatFormatting;
@@ -17,42 +17,75 @@ import net.minecraftforge.registries.ForgeRegistries;
 import java.util.*;
 public class InspectionManager {
     private static final Map<UUID, Integer> RISK_POINTS = new HashMap<>();
-    public static boolean isTrackedMachine(BlockState state) {
+    private static final String STEAM_ID = "create:steam_engine";
+    public static String getTrackedId(BlockState state) {
         ResourceLocation id = ForgeRegistries.BLOCKS.getKey(state.getBlock());
-        return id != null && RecipeBlocker.RESTRICTED_MACHINES.contains(id.toString());
+        if (id != null && RecipeBlocker.RESTRICTED_MACHINES.contains(id.toString())) return id.toString();
+        return null;
     }
     public static void tickInspection(ServerLevel level) {
         PlotSavedData plots = PlotSavedData.get(level);
         for (ServerPlayer player : level.players()) {
             if (player.isCreative() || player.isSpectator()) continue;
-            List<BlockPos> illegalMachines = new ArrayList<>();
             BlockPos center = player.blockPosition();
-            for (BlockPos p : BlockPos.betweenClosed(center.offset(-32, -16, -32), center.offset(32, 16, 32))) {
-                if (isTrackedMachine(level.getBlockState(p)) && plots.getPlotAt(p) == null) illegalMachines.add(p.immutable());
+            if (Math.abs(center.getX()) > 1000000 || Math.abs(center.getZ()) > 1000000) continue;
+            Map<String, List<BlockPos>> wildByType = new HashMap<>();
+            Map<String, Map<String, List<BlockPos>>> plotByType = new HashMap<>();
+            for (BlockPos p : BlockPos.betweenClosed(center.offset(-48, -16, -48), center.offset(48, 16, 48))) {
+                if (Math.abs(p.getX()) > 1000000 || Math.abs(p.getZ()) > 1000000) continue;
+                String mId = getTrackedId(level.getBlockState(p));
+                if (mId == null) continue;
+                IndustrialPlot plot = plots.getPlotAt(p);
+                if (plot == null) wildByType.computeIfAbsent(mId, k -> new ArrayList<>()).add(p.immutable());
+                else if (player.getUUID().equals(plot.ownerId)) {
+                    plotByType.computeIfAbsent(plot.id, k -> new HashMap<>()).computeIfAbsent(mId, k -> new ArrayList<>()).add(p.immutable());
+                }
             }
-            int excess = illegalMachines.size() - 2;
-            if (excess <= 0) { RISK_POINTS.put(player.getUUID(), Math.max(0, RISK_POINTS.getOrDefault(player.getUUID(), 0) - 2)); continue; }
-            int risk = RISK_POINTS.getOrDefault(player.getUUID(), 0) + excess * 3;
+            List<BlockPos> toConfiscate = new ArrayList<>();
+            int riskWeight = 0;
+            for (Map.Entry<String, List<BlockPos>> e : wildByType.entrySet()) {
+                int allowed = e.getKey().equals(STEAM_ID) ? 0 : 2;
+                int weight = e.getKey().equals(STEAM_ID) ? 8 : 1;
+                List<BlockPos> list = e.getValue();
+                for (int i = allowed; i < list.size(); i++) { toConfiscate.add(list.get(i)); riskWeight += weight; }
+            }
+            for (Map.Entry<String, Map<String, List<BlockPos>>> pe : plotByType.entrySet()) {
+                IndustrialPlot plot = plots.getPlotById(pe.getKey());
+                if (plot == null) continue;
+                for (Map.Entry<String, List<BlockPos>> me : pe.getValue().entrySet()) {
+                    int limit = me.getKey().equals(STEAM_ID) ? plot.tier.maxSteamEngines : plot.tier.maxMachinesPerType;
+                    int weight = me.getKey().equals(STEAM_ID) ? 8 : 1;
+                    List<BlockPos> list = me.getValue();
+                    for (int i = limit; i < list.size(); i++) { toConfiscate.add(list.get(i)); riskWeight += weight; }
+                }
+            }
+            if (toConfiscate.isEmpty()) { RISK_POINTS.put(player.getUUID(), Math.max(0, RISK_POINTS.getOrDefault(player.getUUID(), 0) - 2)); continue; }
+            int risk = RISK_POINTS.getOrDefault(player.getUUID(), 0) + riskWeight * 3;
             if (risk >= 30 && level.random.nextInt(100) < Math.min(85, risk)) {
                 RISK_POINTS.put(player.getUUID(), 0);
-                int confiscated = 0;
-                for (int i = 2; i != illegalMachines.size(); i++) {
-                    BlockPos target = illegalMachines.get(i);
+                long totalFine = 0L;
+                for (BlockPos target : toConfiscate) {
+                    String mId = getTrackedId(level.getBlockState(target));
+                    MarketItemEntry entry = mId == null ? null : ItemCatalogManager.getItem(mId);
+                    long unitPrice = entry != null ? entry.baseBuyPrice : 1000L;
+                    totalFine += Math.round(unitPrice * 0.5);
                     level.setBlock(target, Blocks.AIR.defaultBlockState(), 3);
                     level.sendParticles(ParticleTypes.LARGE_SMOKE, target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5, 12, 0.3, 0.3, 0.3, 0.02);
-                    confiscated++;
                 }
-                long fine = confiscated * 1500L;
+                final long fine = totalFine; final int count = toConfiscate.size();
                 player.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
-                    long paid = Math.min(f.getCash(), fine); f.setCash(f.getCash() - paid);
-                    long remFine = fine - paid; if (remFine > 0) f.setBankBalance(Math.max(0L, f.getBankBalance() - remFine));
+                    long fromCash = Math.min(f.getCash(), fine); f.setCash(f.getCash() - fromCash);
+                    long remFine = fine - fromCash;
+                    long fromBank = Math.min(f.getBankBalance(), remFine); f.setBankBalance(f.getBankBalance() - fromBank);
                     FinanceEvents.syncToClient(player, f);
+                    player.sendSystemMessage(Component.literal("[INDUSTRIAL INSPECTION] Raid! Confiscated " + count + " illegal machines! Fine (50% value): " + String.format("%,d$", fine)).withStyle(ChatFormatting.RED));
+                    if (fromBank > 0) player.sendSystemMessage(Component.literal("Debited " + String.format("%,d$", fromBank) + " from your bank account by Industrial Inspection!").withStyle(ChatFormatting.GOLD));
+                    if (remFine > fromBank) player.sendSystemMessage(Component.literal("Cash & Bank zeroed due to unpaid debt. Fine settled.").withStyle(ChatFormatting.GRAY));
                 });
                 level.playSound(null, player.blockPosition(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.0f, 0.6f);
-                player.sendSystemMessage(Component.literal("[INDUSTRIAL INSPECTION] Raid! Confiscated " + confiscated + " illegal machines outside plots! Fine: " + String.format("%,d$", fine)).withStyle(ChatFormatting.RED));
             } else {
                 RISK_POINTS.put(player.getUUID(), risk);
-                if (risk == excess * 3) player.sendSystemMessage(Component.literal("[Inspection Warning] More than 2 machines outside a plot increases raid risk!").withStyle(ChatFormatting.YELLOW));
+                if (risk == riskWeight * 3) player.sendSystemMessage(Component.literal("[Inspection Warning] Illegal machine placement detected! Raid risk is growing!").withStyle(ChatFormatting.YELLOW));
             }
         }
     }

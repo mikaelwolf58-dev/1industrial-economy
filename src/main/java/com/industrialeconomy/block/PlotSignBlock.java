@@ -21,16 +21,16 @@ public class PlotSignBlock extends Block {
             IndustrialPlot plot = data.getPlotAt(pos);
             if (plot == null) { sp.sendSystemMessage(Component.literal("No plot linked to this sign.").withStyle(ChatFormatting.GRAY)); return InteractionResult.SUCCESS; }
             if (plot.ownerId != null) {
-                sp.sendSystemMessage(Component.literal("Plot [" + plot.tier.name() + " " + plot.tier.size + "x" + plot.tier.size + "] | Owner: " + plot.ownerName).withStyle(ChatFormatting.AQUA));
+                sp.sendSystemMessage(Component.literal("Plot [" + plot.tier.name() + " " + plot.tier.size + "x" + plot.tier.size + "] | Limit: " + plot.tier.maxMachinesPerType + "/type, Steam: " + plot.tier.maxSteamEngines + " | Owner: " + plot.ownerName).withStyle(ChatFormatting.AQUA));
                 return InteractionResult.SUCCESS;
             }
             sp.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
                 if (!f.spendCash(plot.tier.price)) {
-                    sp.sendSystemMessage(Component.literal("Plot FOR SALE (" + plot.tier.size + "x" + plot.tier.size + ") | Price: " + String.format("%,d$", plot.tier.price) + " (Not enough cash!)").withStyle(ChatFormatting.YELLOW));
+                    sp.sendSystemMessage(Component.literal("Plot FOR SALE (" + plot.tier.size + "x" + plot.tier.size + ", Limit: " + plot.tier.maxMachinesPerType + "/type, Steam: " + plot.tier.maxSteamEngines + ") | Price: " + String.format("%,d$", plot.tier.price) + " (Not enough cash!)").withStyle(ChatFormatting.YELLOW));
                 } else {
                     plot.ownerId = sp.getUUID(); plot.ownerName = sp.getName().getString();
                     data.setDirty(); FinanceEvents.syncToClient(sp, f);
-                    sp.sendSystemMessage(Component.literal("Congratulations! You bought plot " + plot.tier.size + "x" + plot.tier.size + " for " + String.format("%,d$", plot.tier.price)).withStyle(ChatFormatting.GREEN));
+                    sp.sendSystemMessage(Component.literal("Congratulations! Bought plot " + plot.tier.size + "x" + plot.tier.size + " for " + String.format("%,d$", plot.tier.price)).withStyle(ChatFormatting.GREEN));
                 }
             });
         }
