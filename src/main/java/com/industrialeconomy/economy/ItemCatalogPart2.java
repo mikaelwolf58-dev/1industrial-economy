@@ -3,7 +3,11 @@ import java.util.List;
 public class ItemCatalogPart2 {
     private static void add(List<MarketItemEntry> l, String id, MarketCategory c, long buy, long sell, double vol) { l.add(new MarketItemEntry(id, c, buy, sell, vol)); }
     public static void fill(List<MarketItemEntry> l) {
+        add(l, "minecraft:sand", MarketCategory.BUILDING, 6, 2, 0.10);
+        add(l, "minecraft:red_sand", MarketCategory.BUILDING, 8, 3, 0.10);
+        add(l, "minecraft:gravel", MarketCategory.BUILDING, 6, 2, 0.10);
         add(l, "minecraft:wheat", MarketCategory.AGRICULTURE, 12, 6, 0.20);
+        add(l, "minecraft:bone_meal", MarketCategory.AGRICULTURE, 14, 6, 0.20);
         add(l, "minecraft:hay_block", MarketCategory.AGRICULTURE, 108, 54, 0.20);
         add(l, "minecraft:carrot", MarketCategory.AGRICULTURE, 10, 5, 0.20);
         add(l, "minecraft:potato", MarketCategory.AGRICULTURE, 10, 5, 0.20);
@@ -39,19 +43,15 @@ public class ItemCatalogPart2 {
         add(l, "create:sweet_roll", MarketCategory.FOOD, 55, 28, 0.15);
         add(l, "create:chocolate_glazed_berries", MarketCategory.FOOD, 65, 34, 0.15);
         add(l, "create:honeyed_apple", MarketCategory.FOOD, 60, 30, 0.15);
+        add(l, "minecraft:diamond", MarketCategory.RARE, 900, 550, 0.10);
+        add(l, "minecraft:emerald", MarketCategory.RARE, 320, 180, 0.12);
+        add(l, "minecraft:netherite_ingot", MarketCategory.RARE, 11000, 6800, 0.08);
         add(l, "minecraft:redstone", MarketCategory.RARE, 32, 16, 0.15);
-        add(l, "minecraft:redstone_block", MarketCategory.RARE, 288, 144, 0.15);
         add(l, "minecraft:lapis_lazuli", MarketCategory.RARE, 40, 20, 0.15);
-        add(l, "minecraft:lapis_block", MarketCategory.RARE, 360, 180, 0.15);
         add(l, "minecraft:quartz", MarketCategory.RARE, 35, 18, 0.15);
         add(l, "minecraft:amethyst_shard", MarketCategory.RARE, 55, 28, 0.15);
-        add(l, "minecraft:emerald", MarketCategory.RARE, 320, 180, 0.12);
-        add(l, "minecraft:emerald_block", MarketCategory.RARE, 2880, 1620, 0.12);
-        add(l, "minecraft:diamond", MarketCategory.RARE, 900, 550, 0.10);
-        add(l, "minecraft:diamond_block", MarketCategory.RARE, 8100, 4950, 0.10);
         add(l, "minecraft:ancient_debris", MarketCategory.RARE, 2400, 1400, 0.08);
         add(l, "minecraft:netherite_scrap", MarketCategory.RARE, 2600, 1550, 0.08);
-        add(l, "minecraft:netherite_ingot", MarketCategory.RARE, 11000, 6800, 0.08);
         add(l, "minecraft:ender_pearl", MarketCategory.RARE, 160, 85, 0.12);
         add(l, "minecraft:slime_ball", MarketCategory.RARE, 65, 32, 0.15);
         add(l, "minecraft:glowstone_dust", MarketCategory.RARE, 30, 15, 0.15);
@@ -62,6 +62,11 @@ public class ItemCatalogPart2 {
         add(l, "create:crushing_wheel", MarketCategory.EQUIPMENT, 2800, 1100, 0.05);
         add(l, "create:mechanical_saw", MarketCategory.EQUIPMENT, 1100, 450, 0.05);
         add(l, "create:mechanical_drill", MarketCategory.EQUIPMENT, 1100, 450, 0.05);
+        add(l, "create:mechanical_harvester", MarketCategory.EQUIPMENT, 1150, 480, 0.05);
+        add(l, "create:mechanical_plough", MarketCategory.EQUIPMENT, 950, 400, 0.05);
+        add(l, "create:mechanical_roller", MarketCategory.EQUIPMENT, 1500, 650, 0.05);
+        add(l, "create:mechanical_arm", MarketCategory.EQUIPMENT, 2200, 950, 0.05);
+        add(l, "create:blaze_burner", MarketCategory.EQUIPMENT, 1350, 580, 0.05);
         add(l, "create:mechanical_crafter", MarketCategory.EQUIPMENT, 1600, 700, 0.05);
         add(l, "create:encased_fan", MarketCategory.EQUIPMENT, 950, 400, 0.05);
         add(l, "create:spout", MarketCategory.EQUIPMENT, 1300, 550, 0.05);

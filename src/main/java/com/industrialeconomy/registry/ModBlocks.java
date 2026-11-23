@@ -28,6 +28,7 @@ public class ModBlocks {
     public static final RegistryObject<Block> SHOP_AGRICULTURE = registerBlock("shop_agriculture", () -> new ShopTerminalBlock(metal(), MarketCategory.AGRICULTURE));
     public static final RegistryObject<Block> SHOP_FOOD = registerBlock("shop_food", () -> new ShopTerminalBlock(metal(), MarketCategory.FOOD));
     public static final RegistryObject<Block> SHOP_RARE = registerBlock("shop_rare", () -> new ShopTerminalBlock(metal(), MarketCategory.RARE));
+    public static final RegistryObject<Block> SHOP_BOUTIQUE = registerBlock("shop_boutique", () -> new ShopTerminalBlock(metal(), MarketCategory.BOUTIQUE));
     private static <T extends Block> RegistryObject<T> registerBlock(String name, Supplier<T> block) { RegistryObject<T> ret = BLOCKS.register(name, block); ModItems.ITEMS.register(name, () -> new BlockItem(ret.get(), new Item.Properties())); return ret; }
     public static void register(IEventBus bus) { BLOCKS.register(bus); }
 }

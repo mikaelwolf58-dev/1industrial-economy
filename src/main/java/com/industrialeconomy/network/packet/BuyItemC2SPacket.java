@@ -25,11 +25,24 @@ public class BuyItemC2SPacket {
         ctx.enqueueWork(() -> {
             ServerPlayer player = ctx.getSender();
             if (player == null || count == 0) return;
-            MarketItemEntry entry = ItemCatalogManager.getItem(itemId);
-            if (entry == null) return;
             ServerLevel level = player.serverLevel();
             Container targetChest = findNearbyChest(level, terminalPos, 10);
             if (targetChest == null) { player.displayClientMessage(Component.literal("No delivery chest found (radius 10)!").withStyle(ChatFormatting.RED), true); return; }
+            if (itemId.startsWith("boutique:")) {
+                String bId = itemId.substring(9);
+                var offer = BoutiqueCatalog.getCurrentBatch(level.getGameTime(), level.registryAccess()).stream().filter(o -> o.id().equals(bId)).findFirst().orElse(null);
+                if (offer == null) return;
+                player.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
+                    if (!f.spendCash(offer.price())) { player.displayClientMessage(Component.literal("Not enough cash! Need: " + offer.price() + "$").withStyle(ChatFormatting.RED), true); return; }
+                    ItemStack rem = insertIntoContainer(targetChest, offer.displayStack().copy());
+                    if (!rem.isEmpty()) player.getInventory().placeItemBackInInventory(rem);
+                    FinanceEvents.syncToClient(player, f);
+                    player.displayClientMessage(Component.literal("Purchased: -" + String.format("%,d$", offer.price())).withStyle(ChatFormatting.RED), true);
+                });
+                return;
+            }
+            MarketItemEntry entry = ItemCatalogManager.getItem(itemId);
+            if (entry == null) return;
             EconomySavedData eco = EconomySavedData.get(level);
             long totalCost = eco.getDynamicBuyPrice(itemId) * count;
             Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(itemId));

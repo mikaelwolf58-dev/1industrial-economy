@@ -10,6 +10,8 @@ public class RecipeBlocker {
     public static final Set<String> RESTRICTED_MACHINES = Set.of(
         "create:mechanical_press", "create:mechanical_mixer", "create:millstone",
         "create:crushing_wheel", "create:mechanical_saw", "create:mechanical_drill",
+        "create:mechanical_harvester", "create:mechanical_plough", "create:mechanical_roller",
+        "create:mechanical_arm", "create:blaze_burner",
         "create:mechanical_crafter", "create:encased_fan", "create:spout",
         "create:deployer", "create:steam_engine"
     );
