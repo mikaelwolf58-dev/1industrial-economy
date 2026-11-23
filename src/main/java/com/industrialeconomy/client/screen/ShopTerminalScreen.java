@@ -45,7 +45,7 @@ public class ShopTerminalScreen extends AbstractContainerScreen<ShopTerminalMenu
         for (int i = 0; i != 5 && (start + i) != items.size(); i++) {
             MarketItemEntry entry = items.get(start + i);
             int rowY = y + 40 + i * 24;
-            String shortName = entry.itemId.contains(":") ? entry.itemId.split(":") : entry.itemId;
+            String shortName = entry.itemId.substring(entry.itemId.indexOf(":") + 1);
             g.drawString(this.font, shortName + " (В§e" + entry.baseBuyPrice + "$В§f)", x + 12, rowY, 0xFFFFFF);
         }
         this.renderTooltip(g, mx, my);
