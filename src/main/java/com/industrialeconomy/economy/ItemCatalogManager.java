@@ -20,7 +20,7 @@ public class ItemCatalogManager {
             if (!needWrite) {
                 try (FileReader r = new FileReader(file.toFile())) {
                     List<MarketItemEntry> old = GSON.fromJson(r, new TypeToken<List<MarketItemEntry>>(){}.getType());
-                    if (old == null || old.size() != 120) needWrite = true;
+                    if (old == null || old.stream().noneMatch(e -> "create:mechanical_arm".equals(e.itemId))) needWrite = true;
                 }
             }
             if (needWrite) {

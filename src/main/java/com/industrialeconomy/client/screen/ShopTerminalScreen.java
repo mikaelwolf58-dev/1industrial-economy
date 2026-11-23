@@ -71,25 +71,30 @@ public class ShopTerminalScreen extends AbstractContainerScreen<ShopTerminalMenu
         if (menu.category == MarketCategory.BOUTIQUE) {
             g.drawString(this.font, "Days until next batch: " + daysLeft, x + 12, y + 24, 0xFFAA00);
         }
-        int start = page * 5;
+        int start = page * 5; ItemStack hovered = ItemStack.EMPTY;
         if (menu.category == MarketCategory.BOUTIQUE) {
             for (int i = 0; i != 5 && (start + i) != boutique.size(); i++) {
                 var off = boutique.get(start + i); int rowY = y + 44 + i * 24;
                 g.renderItem(off.displayStack(), x + 12, rowY + 1);
                 g.drawString(this.font, off.title() + " (" + String.format("%,d$", off.price()) + ")", x + 32, rowY + 5, 0xFFFFFF);
+                if (mx >= x + 10 && mx <= x + 210 && my >= rowY && my <= rowY + 20) hovered = off.displayStack();
             }
         } else {
             for (int i = 0; i != 5 && (start + i) != items.size(); i++) {
                 MarketItemEntry entry = items.get(start + i); int rowY = y + 44 + i * 24;
                 Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(entry.itemId));
-                if (item != null) g.renderItem(new ItemStack(item), x + 12, rowY + 1);
+                if (item != null) {
+                    ItemStack st = new ItemStack(item); g.renderItem(st, x + 12, rowY + 1);
+                    if (mx >= x + 10 && mx <= x + 174 && my >= rowY && my <= rowY + 20) hovered = st;
+                }
                 String shortName = entry.itemId.substring(entry.itemId.indexOf(":") + 1);
                 if (shortName.length() > 16) shortName = shortName.substring(0, 16);
                 g.drawString(this.font, shortName + " (" + entry.baseBuyPrice + "$)", x + 32, rowY + 5, 0xFFFFFF);
             }
         }
         g.drawString(this.font, "Page " + (page + 1) + "/" + (maxPage() + 1), x + 115, y + 181, 0xAAAAAA);
-        this.renderTooltip(g, mx, my);
+        if (!hovered.isEmpty()) g.renderTooltip(this.font, hovered, mx, my);
+        else this.renderTooltip(g, mx, my);
     }
     @Override protected void renderLabels(GuiGraphics g, int mx, int my) {}
 }
