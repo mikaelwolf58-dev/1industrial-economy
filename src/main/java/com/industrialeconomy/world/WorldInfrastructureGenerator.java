@@ -12,8 +12,8 @@ public class WorldInfrastructureGenerator {
     public static void tickWorldGen(ServerLevel level) {
         WorldHubSavedData data = WorldHubSavedData.get(level);
         for (ServerPlayer sp : level.players()) {
-            int rx = Math.floorDiv(sp.blockPosition().getX(), 384);
-            int rz = Math.floorDiv(sp.blockPosition().getZ(), 384);
+            int rx = Math.floorDiv(sp.blockPosition().getX(), 256);
+            int rz = Math.floorDiv(sp.blockPosition().getZ(), 256);
             for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) {
                 int crx = rx + dx; int crz = rz + dz;
                 if (!data.markRegionChecked(crx, crz)) continue;
@@ -23,17 +23,23 @@ public class WorldInfrastructureGenerator {
     }
     private static void generateInRegion(ServerLevel level, WorldHubSavedData data, int rx, int rz) {
         Random rnd = new Random(level.getSeed() ^ (rx * 341873128712L + rz * 132897987541L));
-        int cx = rx * 384 + 96 + rnd.nextInt(192);
-        int cz = rz * 384 + 96 + rnd.nextInt(192);
-        int cy = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, cx, cz);
-        if (cy < 62 || cy > 115) return;
-        BlockPos ground = new BlockPos(cx, cy - 1, cz);
-        if (!level.getBlockState(ground).isSolid() || level.getBlockState(ground.above()).liquid()) return;
-        int roll = Math.floorMod(rx * 3 + rz * 5, 4);
-        if (roll == 0) buildGasStation(level, data, new BlockPos(cx, cy, cz));
-        else if (roll == 1) buildTradeMarket(level, data, new BlockPos(cx, cy, cz));
-        else if (roll == 2) buildEquipmentPlaza(level, data, new BlockPos(cx, cy, cz));
-        else buildIndustrialZone(level, data, new BlockPos(cx, cy, cz), rnd);
+        for (int attempt = 0; attempt != 6; attempt++) {
+            int cx = rx * 256 + 48 + rnd.nextInt(160);
+            int cz = rz * 256 + 48 + rnd.nextInt(160);
+            int cy = level.getHeight(Heightmap.Types.WORLD_SURFACE, cx, cz);
+            if (cy < 60 || cy > 130) continue;
+            BlockPos pos = new BlockPos(cx, cy - 1, cz);
+            while (pos.getY() > 58 && !level.getBlockState(pos).blocksMotion() && level.getFluidState(pos).isEmpty()) pos = pos.below();
+            if (!level.getFluidState(pos).isEmpty() || !level.getFluidState(pos.above()).isEmpty()) continue;
+            if (!level.getBlockState(pos).blocksMotion()) continue;
+            BlockPos buildOrigin = pos.above();
+            int roll = Math.floorMod(rx * 3 + rz * 5, 4);
+            if (roll == 0) buildGasStation(level, data, buildOrigin);
+            else if (roll == 1) buildTradeMarket(level, data, buildOrigin);
+            else if (roll == 2) buildEquipmentPlaza(level, data, buildOrigin);
+            else buildIndustrialZone(level, data, buildOrigin, rnd);
+            return;
+        }
     }
     private static void clearAndPad(ServerLevel l, BlockPos o, int w, int d) {
         for (int x = 0; x != w; x++) for (int z = 0; z != d; z++) {
