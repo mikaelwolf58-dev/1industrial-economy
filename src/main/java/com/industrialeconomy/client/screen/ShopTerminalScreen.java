@@ -24,6 +24,12 @@ public class ShopTerminalScreen extends AbstractContainerScreen<ShopTerminalMenu
         this.items = ItemCatalogManager.getAll().stream().filter(e -> e.category.equals(menu.category.name())).collect(Collectors.toList());
         rebuildButtons();
     }
+    private int maxPage() { return Math.max(0, (items.size() - 1) / 5); }
+    @Override public boolean mouseScrolled(double mx, double my, double delta) {
+        if (delta > 0 && page > 0) { page--; rebuildButtons(); return true; }
+        if (delta < 0 && page != maxPage()) { page++; rebuildButtons(); return true; }
+        return super.mouseScrolled(mx, my, delta);
+    }
     private void rebuildButtons() {
         this.clearWidgets();
         int x = (this.width - this.imageWidth) / 2; int y = (this.height - this.imageHeight) / 2;
@@ -36,7 +42,7 @@ public class ShopTerminalScreen extends AbstractContainerScreen<ShopTerminalMenu
             this.addRenderableWidget(Button.builder(Component.literal("x64"), b -> ModMessages.sendToServer(new BuyItemC2SPacket(menu.pos, entry.itemId, 64))).bounds(x + 242, rowY, 32, 18).build());
         }
         if (page > 0) this.addRenderableWidget(Button.builder(Component.literal("Prev"), b -> { page--; rebuildButtons(); }).bounds(x + 12, y + 166, 55, 18).build());
-        if ((page + 1) * 5 != items.size() && (start + 5) == Math.min(start + 5, items.size())) this.addRenderableWidget(Button.builder(Component.literal("Next"), b -> { page++; rebuildButtons(); }).bounds(x + 218, y + 166, 55, 18).build());
+        if (page != maxPage()) this.addRenderableWidget(Button.builder(Component.literal("Next"), b -> { page++; rebuildButtons(); }).bounds(x + 218, y + 166, 55, 18).build());
     }
     @Override protected void renderBg(GuiGraphics g, float pt, int mx, int my) {
         int x = (this.width - this.imageWidth) / 2; int y = (this.height - this.imageHeight) / 2;
@@ -56,6 +62,7 @@ public class ShopTerminalScreen extends AbstractContainerScreen<ShopTerminalMenu
             if (shortName.length() > 16) shortName = shortName.substring(0, 16);
             g.drawString(this.font, shortName + " (" + entry.baseBuyPrice + "$)", x + 32, rowY + 5, 0xFFFFFF);
         }
+        g.drawString(this.font, "Page " + (page + 1) + "/" + (maxPage() + 1), x + 115, y + 171, 0xAAAAAA);
         this.renderTooltip(g, mx, my);
     }
     @Override protected void renderLabels(GuiGraphics g, int mx, int my) {}
