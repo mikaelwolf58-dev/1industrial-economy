@@ -13,7 +13,7 @@ import net.minecraftforge.network.NetworkHooks;
 public class BankTerminalBlock extends Block {
     public BankTerminalBlock(Properties p) { super(p); }
     @Override public InteractionResult use(BlockState s, Level l, BlockPos pos, Player p, InteractionHand h, BlockHitResult hit) {
-        if (!l.isClientSide && p instanceof ServerPlayer sp) NetworkHooks.openScreen(sp, new SimpleMenuProvider((id, inv, pl) -> new BankTerminalMenu(id, inv), Component.translatable("block.industrial_economy.bank_terminal")));
+        if (!l.isClientSide && p instanceof ServerPlayer sp) NetworkHooks.openScreen(sp, new SimpleMenuProvider((id, inv, pl) -> new BankTerminalMenu(id, inv), Component.literal("Bank Terminal")));
         return InteractionResult.sidedSuccess(l.isClientSide);
     }
 }

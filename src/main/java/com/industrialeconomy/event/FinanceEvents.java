@@ -1,22 +1,33 @@
 package com.industrialeconomy.event;
 import com.industrialeconomy.IndustrialEconomy;
+import com.industrialeconomy.command.EcoCommand;
+import com.industrialeconomy.economy.EconomySavedData;
 import com.industrialeconomy.finance.PlayerFinanceData;
 import com.industrialeconomy.finance.PlayerFinanceProvider;
 import com.industrialeconomy.network.ModMessages;
 import com.industrialeconomy.network.packet.SyncFinanceS2CPacket;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = IndustrialEconomy.MODID)
 public class FinanceEvents {
+    @SubscribeEvent public static void onCommands(RegisterCommandsEvent event) { EcoCommand.register(event.getDispatcher()); }
+    @SubscribeEvent public static void onLevelTick(TickEvent.LevelTickEvent event) {
+        if (event.phase == TickEvent.Phase.END && !event.level.isClientSide && event.level instanceof ServerLevel sl && sl.dimension() == ServerLevel.OVERWORLD) {
+            if (sl.getGameTime() % 1200 == 0) EconomySavedData.get(sl).tickMarketRecovery();
+        }
+    }
     @SubscribeEvent public static void onAttach(AttachCapabilitiesEvent<Entity> event) {
         if (event.getObject() instanceof Player && !event.getObject().getCapability(PlayerFinanceProvider.PLAYER_FINANCE).isPresent()) {
             event.addCapability(new ResourceLocation(IndustrialEconomy.MODID, "finance"), new PlayerFinanceProvider());
@@ -26,7 +37,7 @@ public class FinanceEvents {
         if (event.getEntity() instanceof ServerPlayer player) {
             player.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
                 long lost = f.getCash();
-                if (lost > 0) { f.setCash(0L); player.sendSystemMessage(Component.translatable("msg.industrial_economy.lost_cash", String.format("%,d$", lost))); syncToClient(player, f); }
+                if (lost > 0) { f.setCash(0L); player.sendSystemMessage(Component.literal("В§cYou died and lost all cash: В§e" + String.format("%,d$", lost))); syncToClient(player, f); }
             });
         }
     }

@@ -1,4 +1,5 @@
 package com.industrialeconomy;
+import com.industrialeconomy.economy.ItemCatalogManager;
 import com.industrialeconomy.network.ModMessages;
 import com.industrialeconomy.registry.*;
 import net.minecraftforge.common.MinecraftForge;
@@ -18,5 +19,7 @@ public class IndustrialEconomy {
         bus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);
     }
-    private void commonSetup(final FMLCommonSetupEvent event) { event.enqueueWork(ModMessages::register); }
+    private void commonSetup(final FMLCommonSetupEvent event) {
+        event.enqueueWork(() -> { ModMessages.register(); ItemCatalogManager.loadOrCreateDefault(); });
+    }
 }

@@ -13,7 +13,7 @@ public class CashHudOverlay {
     public static final IGuiOverlay HUD_CASH = (gui, g, pt, w, h) -> {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.options.hideGui || mc.player.isSpectator()) return;
-        String text = String.format("РќР°Р»РёС‡РЅС‹Рµ: %,d$", ClientFinanceData.getCash());
+        String text = String.format("Money: %,d$", ClientFinanceData.getCash());
         Font font = mc.font;
         int x = (w - font.width(text)) / 2; int y = h - 49;
         g.drawString(font, text, x + 1, y + 1, 0x000000, false);
