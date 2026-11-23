@@ -24,34 +24,34 @@ public class BoutiqueCatalog {
         long batchNum = (gameTime / BATCH_TICKS) + 1L;
         Random rnd = new Random(batchNum * 7919L);
         List<BoutiqueOffer> list = new ArrayList<>();
-        list.add(makeArmor("helm", "Royal Helm", Items.NETHERITE_HELMET, 18500L, rnd, access, 0));
-        list.add(makeArmor("chest", "Titan Chestplate", Items.NETHERITE_CHESTPLATE, 28000L, rnd, access, 1));
-        list.add(makeArmor("legs", "Elite Leggings", Items.DIAMOND_LEGGINGS, 14500L, rnd, access, 2));
-        list.add(makeArmor("boots", "Swift Boots", Items.NETHERITE_BOOTS, 17000L, rnd, access, 3));
+        list.add(makeArmor("helm", "Royal Helm VI", Items.NETHERITE_HELMET, 26000L, rnd, access, 0));
+        list.add(makeArmor("chest", "Titan Chestplate VI", Items.NETHERITE_CHESTPLATE, 38000L, rnd, access, 1));
+        list.add(makeArmor("legs", "Elite Leggings VI", Items.NETHERITE_LEGGINGS, 32000L, rnd, access, 2));
+        list.add(makeArmor("boots", "Swift Boots VI", Items.NETHERITE_BOOTS, 25000L, rnd, access, 3));
         ItemStack sword = new ItemStack(Items.NETHERITE_SWORD);
-        sword.enchant(Enchantments.SHARPNESS, 4 + rnd.nextInt(2));
-        sword.enchant(Enchantments.MOB_LOOTING, 2 + rnd.nextInt(2));
-        sword.enchant(Enchantments.UNBREAKING, 3);
-        sword.setHoverName(Component.literal("Executive Blade (Batch #" + batchNum + ")"));
-        list.add(new BoutiqueOffer("sword", "Executive Blade", 22000L, sword));
+        sword.enchant(Enchantments.SHARPNESS, 7);
+        sword.enchant(Enchantments.MOB_LOOTING, 5);
+        sword.enchant(Enchantments.UNBREAKING, 5);
+        sword.setHoverName(Component.literal("Executive Blade VII (Batch #" + batchNum + ")"));
+        list.add(new BoutiqueOffer("sword", "Executive Blade VII", 34000L, sword));
         ItemStack pick = new ItemStack(Items.NETHERITE_PICKAXE);
-        pick.enchant(Enchantments.BLOCK_EFFICIENCY, 5);
-        pick.enchant(rnd.nextBoolean() ? Enchantments.BLOCK_FORTUNE : Enchantments.SILK_TOUCH, rnd.nextBoolean() ? 3 : 1);
-        pick.enchant(Enchantments.UNBREAKING, 3);
-        pick.setHoverName(Component.literal("Master Drill Pickaxe (Batch #" + batchNum + ")"));
-        list.add(new BoutiqueOffer("pick", "Master Pickaxe", 24000L, pick));
+        pick.enchant(Enchantments.BLOCK_EFFICIENCY, 7);
+        pick.enchant(rnd.nextBoolean() ? Enchantments.BLOCK_FORTUNE : Enchantments.SILK_TOUCH, rnd.nextBoolean() ? 5 : 1);
+        pick.enchant(Enchantments.UNBREAKING, 5);
+        pick.setHoverName(Component.literal("Master Drill Pickaxe VII (Batch #" + batchNum + ")"));
+        list.add(new BoutiqueOffer("pick", "Master Pickaxe VII", 36000L, pick));
         ItemStack elytra = new ItemStack(Items.ELYTRA);
-        elytra.enchant(Enchantments.UNBREAKING, 3);
+        elytra.enchant(Enchantments.UNBREAKING, 6);
         elytra.enchant(Enchantments.MENDING, 1);
-        elytra.setHoverName(Component.literal("VIP Wing Suit"));
-        list.add(new BoutiqueOffer("elytra", "VIP Elytra", 45000L, elytra));
+        elytra.setHoverName(Component.literal("VIP Wing Suit VI"));
+        list.add(new BoutiqueOffer("elytra", "VIP Elytra VI", 55000L, elytra));
         return list;
     }
     private static BoutiqueOffer makeArmor(String id, String name, Item item, long price, Random rnd, RegistryAccess access, int slot) {
         ItemStack st = new ItemStack(item);
-        st.enchant(Enchantments.ALL_DAMAGE_PROTECTION, 3 + rnd.nextInt(2));
-        st.enchant(Enchantments.UNBREAKING, 3);
-        if (slot == 3) st.enchant(Enchantments.FALL_PROTECTION, 4);
+        st.enchant(Enchantments.ALL_DAMAGE_PROTECTION, 6);
+        st.enchant(Enchantments.UNBREAKING, 5);
+        if (slot == 3) st.enchant(Enchantments.FALL_PROTECTION, 6);
         if (access != null) {
             try {
                 var patReg = access.registryOrThrow(Registries.TRIM_PATTERN);

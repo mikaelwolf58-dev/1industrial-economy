@@ -45,7 +45,7 @@ public class ItemCatalogPart1 {
         add(l, "minecraft:gray_concrete", MarketCategory.BUILDING, 22, 10, 0.12);
         add(l, "minecraft:black_concrete", MarketCategory.BUILDING, 22, 10, 0.12);
         add(l, "minecraft:quartz_block", MarketCategory.BUILDING, 95, 50, 0.12);
-        add(l, "minecraft:obsidian", MarketCategory.BUILDING, 150, 80, 0.10);
+        add(l, "minecraft:obsidian", MarketCategory.BUILDING, 450, 240, 0.10);
         add(l, "minecraft:oak_log", MarketCategory.WOOD, 16, 8, 0.15);
         add(l, "minecraft:spruce_log", MarketCategory.WOOD, 16, 8, 0.15);
         add(l, "minecraft:birch_log", MarketCategory.WOOD, 16, 8, 0.15);

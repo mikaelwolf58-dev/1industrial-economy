@@ -66,7 +66,7 @@ public class ItemCatalogPart2 {
         add(l, "create:mechanical_plough", MarketCategory.EQUIPMENT, 950, 400, 0.05);
         add(l, "create:mechanical_roller", MarketCategory.EQUIPMENT, 1500, 650, 0.05);
         add(l, "create:mechanical_arm", MarketCategory.EQUIPMENT, 2200, 950, 0.05);
-        add(l, "create:blaze_burner", MarketCategory.EQUIPMENT, 1350, 580, 0.05);
+        add(l, "create:blaze_burner", MarketCategory.EQUIPMENT, 5500, 2400, 0.05);
         add(l, "create:mechanical_crafter", MarketCategory.EQUIPMENT, 1600, 700, 0.05);
         add(l, "create:encased_fan", MarketCategory.EQUIPMENT, 950, 400, 0.05);
         add(l, "create:spout", MarketCategory.EQUIPMENT, 1300, 550, 0.05);
