@@ -26,7 +26,7 @@ public class BuyItemC2SPacket {
         NetworkEvent.Context ctx = sup.get();
         ctx.enqueueWork(() -> {
             ServerPlayer player = ctx.getSender();
-            if (player == null || count <= 0) return;
+            if (player == null || count == 0) return;
             MarketItemEntry entry = ItemCatalogManager.getItem(itemId);
             if (entry == null) return;
             ServerLevel level = player.serverLevel();
@@ -48,43 +48,22 @@ public class BuyItemC2SPacket {
         return true;
     }
     private static Container findNearbyChest(ServerLevel level, BlockPos center, int r) {
-        for (int dx = -r; dx  {
-    private List<MarketItemEntry> items; private int page = 0;
-    public ShopTerminalScreen(ShopTerminalMenu m, Inventory inv, Component t) { super(m, inv, t); this.imageWidth = 250; this.imageHeight = 190; }
-    @Override protected void init() {
-        super.init();
-        this.items = ItemCatalogManager.getAll().stream().filter(e -> e.category.equals(menu.category.name())).collect(Collectors.toList());
-        rebuildButtons();
-    }
-    private void rebuildButtons() {
-        this.clearWidgets();
-        int x = (this.width - this.imageWidth) / 2; int y = (this.height - this.imageHeight) / 2;
-        int start = page * 5;
-        for (int i = 0; i < 5 && (start + i) < items.size(); i++) {
-            MarketItemEntry entry = items.get(start + i);
-            int rowY = y + 36 + i * 24;
-            this.addRenderableWidget(Button.builder(Component.literal("x1"), b -> ModMessages.sendToServer(new BuyItemC2SPacket(menu.pos, entry.itemId, 1))).bounds(x + 175, rowY, 28, 18).build());
-            this.addRenderableWidget(Button.builder(Component.literal("x16"), b -> ModMessages.sendToServer(new BuyItemC2SPacket(menu.pos, entry.itemId, 16))).bounds(x + 206, rowY, 32, 18).build());
+        for (BlockPos p : BlockPos.betweenClosed(center.offset(-r, -3, -r), center.offset(r, 3, r))) {
+            BlockEntity be = level.getBlockEntity(p);
+            if (be instanceof Container c && hasFreeSpace(c)) return c;
         }
-        if (page > 0) this.addRenderableWidget(Button.builder(Component.literal("< Prev"), b -> { page--; rebuildButtons(); }).bounds(x + 12, y + 162, 55, 18).build());
-        if ((page + 1) * 5 < items.size()) this.addRenderableWidget(Button.builder(Component.literal("Next >"), b -> { page++; rebuildButtons(); }).bounds(x + 183, y + 162, 55, 18).build());
+        return null;
     }
-    @Override protected void renderBg(GuiGraphics g, float pt, int mx, int my) {
-        int x = (this.width - this.imageWidth) / 2; int y = (this.height - this.imageHeight) / 2;
-        g.fill(x, y, x + imageWidth, y + imageHeight, 0xEE1A1D24); g.renderOutline(x, y, imageWidth, imageHeight, 0xFF2196F3);
-    }
-    @Override public void render(GuiGraphics g, int mx, int my, float pt) {
-        this.renderBackground(g); super.render(g, mx, my, pt);
-        int x = (this.width - this.imageWidth) / 2; int y = (this.height - this.imageHeight) / 2;
-        g.drawString(this.font, "В§bSHOP: " + menu.category.name() + " В§7| В§a" + String.format("%,d$", ClientFinanceData.getCash()), x + 12, y + 12, 0xFFFFFF);
-        int start = page * 5;
-        for (int i = 0; i < 5 && (start + i) < items.size(); i++) {
-            MarketItemEntry entry = items.get(start + i);
-            int rowY = y + 40 + i * 24;
-            String shortName = entry.itemId.contains(":") ? entry.itemId.split(":")[1] : entry.itemId;
-            g.drawString(this.font, shortName + " (В§e" + entry.baseBuyPrice + "$В§f)", x + 12, rowY, 0xFFFFFF);
+    private static boolean hasFreeSpace(Container c) { for (int i = 0; i != c.getContainerSize(); i++) if (c.getItem(i).isEmpty()) return true; return false; }
+    private static ItemStack insertIntoContainer(Container c, ItemStack stack) {
+        for (int i = 0; i != c.getContainerSize() && !stack.isEmpty(); i++) {
+            ItemStack slot = c.getItem(i);
+            if (slot.isEmpty()) { c.setItem(i, stack.copy()); stack.setCount(0); }
+            else if (ItemStack.isSameItemSameTags(slot, stack) && slot.getCount() != slot.getMaxStackSize()) {
+                int add = Math.min(stack.getCount(), slot.getMaxStackSize() - slot.getCount());
+                slot.grow(add); stack.shrink(add);
+            }
         }
-        this.renderTooltip(g, mx, my);
+        c.setChanged(); return stack;
     }
-    @Override protected void renderLabels(GuiGraphics g, int mx, int my) {}
 }
