@@ -1,0 +1,22 @@
+{
+  "itemGroup.industrialeconomy.industrial_tab": "РРЅРґСѓСЃС‚СЂРёР°Р»СЊРЅР°СЏ Р­РєРѕРЅРѕРјРёРєР°",
+  "item.industrialeconomy.business_newspaper": "Р‘РёР·РЅРµСЃ-РіР°Р·РµС‚Р° (The Industrial Times)",
+  "block.industrialeconomy.bank_terminal": "Р‘Р°РЅРєРѕРјР°С‚ (ATM)",
+  "block.industrialeconomy.plot_sign": "РўРµСЂРјРёРЅР°Р» РїРѕРєСѓРїРєРё СѓС‡Р°СЃС‚РєР°",
+  "block.industrialeconomy.hopper_fuel": "РџРѕРєСѓРїР°СЋС‰Р°СЏ РІРѕСЂРѕРЅРєР°: РўРѕРїР»РёРІРѕ",
+  "block.industrialeconomy.hopper_metals": "РџРѕРєСѓРїР°СЋС‰Р°СЏ РІРѕСЂРѕРЅРєР°: РњРµС‚Р°Р»Р»С‹",
+  "block.industrialeconomy.hopper_building": "РџРѕРєСѓРїР°СЋС‰Р°СЏ РІРѕСЂРѕРЅРєР°: РЎС‚СЂРѕР№РјР°С‚РµСЂРёР°Р»С‹",
+  "block.industrialeconomy.hopper_wood": "РџРѕРєСѓРїР°СЋС‰Р°СЏ РІРѕСЂРѕРЅРєР°: Р”СЂРµРІРµСЃРёРЅР°",
+  "block.industrialeconomy.hopper_agriculture": "РџРѕРєСѓРїР°СЋС‰Р°СЏ РІРѕСЂРѕРЅРєР°: РђРіСЂРѕРїСЂРѕРґСѓРєС†РёСЏ",
+  "block.industrialeconomy.hopper_food": "РџРѕРєСѓРїР°СЋС‰Р°СЏ РІРѕСЂРѕРЅРєР°: РџСЂРѕРґСѓРєС‚С‹",
+  "block.industrialeconomy.hopper_rare": "РџРѕРєСѓРїР°СЋС‰Р°СЏ РІРѕСЂРѕРЅРєР°: Р РµРґРєРёРµ СЂРµСЃСѓСЂСЃС‹",
+  "block.industrialeconomy.shop_equipment": "РљР°СЃСЃР°: РћР±РѕСЂСѓРґРѕРІР°РЅРёРµ Рё РЎС‚Р°РЅРєРё",
+  "block.industrialeconomy.shop_fuel": "РљР°СЃСЃР° РђР—РЎ: РўРѕРїР»РёРІРѕ",
+  "block.industrialeconomy.shop_metals": "РљР°СЃСЃР°: РњРµС‚Р°Р»Р»С‹",
+  "block.industrialeconomy.shop_building": "РљР°СЃСЃР°: РЎС‚СЂРѕР№РјР°С‚РµСЂРёР°Р»С‹",
+  "block.industrialeconomy.shop_wood": "РљР°СЃСЃР°: Р›РµСЃРѕРїРёР»РєР°",
+  "block.industrialeconomy.shop_agriculture": "РљР°СЃСЃР°: РђРіСЂРѕ-СЂС‹РЅРѕРє",
+  "block.industrialeconomy.shop_food": "РљР°СЃСЃР°: РџСЂРѕРґСѓРєС‚С‹",
+  "block.industrialeconomy.shop_rare": "РљР°СЃСЃР°: Р‘РёСЂР¶Р° СЂРµРґРєРёС… СЂРµСЃСѓСЂСЃРѕРІ",
+  "block.industrialeconomy.shop_boutique": "РљР°СЃСЃР°: Р”РѕСЂРѕРіРѕР№ Р±СѓС‚РёРє"
+}

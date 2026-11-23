@@ -1,0 +1,1 @@
+{"parent":"minecraft:block/cube_bottom_top","textures":{"top":"industrialeconomy:block/hopper_top","bottom":"industrialeconomy:block/machine_bottom","side":"industrialeconomy:block/hopper_building"}}
