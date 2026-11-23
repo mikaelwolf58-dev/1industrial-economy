@@ -1,0 +1,66 @@
+package com.industrialeconomy.economy;
+import java.util.List;
+public class ItemCatalogPart1 {
+    private static void add(List<MarketItemEntry> l, String id, MarketCategory c, long buy, long sell, double vol) { l.add(new MarketItemEntry(id, c, buy, sell, vol)); }
+    public static void fill(List<MarketItemEntry> l) {
+        add(l, "minecraft:coal", MarketCategory.FUEL, 25, 14, 0.15);
+        add(l, "minecraft:charcoal", MarketCategory.FUEL, 12, 6, 0.20);
+        add(l, "minecraft:coal_block", MarketCategory.FUEL, 225, 126, 0.15);
+        add(l, "minecraft:blaze_rod", MarketCategory.FUEL, 180, 95, 0.12);
+        add(l, "minecraft:dried_kelp_block", MarketCategory.FUEL, 30, 14, 0.20);
+        add(l, "minecraft:raw_iron", MarketCategory.METALS, 45, 25, 0.15);
+        add(l, "minecraft:iron_ingot", MarketCategory.METALS, 60, 35, 0.15);
+        add(l, "minecraft:iron_nugget", MarketCategory.METALS, 7, 3, 0.15);
+        add(l, "minecraft:iron_block", MarketCategory.METALS, 540, 315, 0.15);
+        add(l, "minecraft:raw_copper", MarketCategory.METALS, 28, 15, 0.15);
+        add(l, "minecraft:copper_ingot", MarketCategory.METALS, 40, 22, 0.15);
+        add(l, "minecraft:copper_block", MarketCategory.METALS, 360, 198, 0.15);
+        add(l, "minecraft:raw_gold", MarketCategory.METALS, 110, 65, 0.15);
+        add(l, "minecraft:gold_ingot", MarketCategory.METALS, 140, 85, 0.15);
+        add(l, "minecraft:gold_nugget", MarketCategory.METALS, 16, 9, 0.15);
+        add(l, "minecraft:gold_block", MarketCategory.METALS, 1260, 765, 0.15);
+        add(l, "create:raw_zinc", MarketCategory.METALS, 48, 27, 0.15);
+        add(l, "create:zinc_ingot", MarketCategory.METALS, 65, 38, 0.15);
+        add(l, "create:zinc_block", MarketCategory.METALS, 585, 342, 0.15);
+        add(l, "create:brass_ingot", MarketCategory.METALS, 180, 110, 0.15);
+        add(l, "create:brass_block", MarketCategory.METALS, 1620, 990, 0.15);
+        add(l, "create:andesite_alloy", MarketCategory.METALS, 30, 16, 0.15);
+        add(l, "create:iron_sheet", MarketCategory.METALS, 75, 42, 0.15);
+        add(l, "create:copper_sheet", MarketCategory.METALS, 50, 28, 0.15);
+        add(l, "create:golden_sheet", MarketCategory.METALS, 165, 95, 0.15);
+        add(l, "create:brass_sheet", MarketCategory.METALS, 210, 125, 0.15);
+        add(l, "minecraft:cobblestone", MarketCategory.BUILDING, 4, 1, 0.10);
+        add(l, "minecraft:stone", MarketCategory.BUILDING, 8, 3, 0.10);
+        add(l, "minecraft:stone_bricks", MarketCategory.BUILDING, 10, 4, 0.10);
+        add(l, "minecraft:andesite", MarketCategory.BUILDING, 8, 3, 0.10);
+        add(l, "minecraft:diorite", MarketCategory.BUILDING, 8, 3, 0.10);
+        add(l, "minecraft:granite", MarketCategory.BUILDING, 8, 3, 0.10);
+        add(l, "minecraft:deepslate", MarketCategory.BUILDING, 10, 4, 0.10);
+        add(l, "minecraft:deepslate_bricks", MarketCategory.BUILDING, 14, 6, 0.10);
+        add(l, "minecraft:bricks", MarketCategory.BUILDING, 18, 8, 0.12);
+        add(l, "minecraft:sand", MarketCategory.BUILDING, 6, 2, 0.10);
+        add(l, "minecraft:sandstone", MarketCategory.BUILDING, 12, 5, 0.10);
+        add(l, "minecraft:gravel", MarketCategory.BUILDING, 6, 2, 0.10);
+        add(l, "minecraft:clay", MarketCategory.BUILDING, 16, 7, 0.12);
+        add(l, "minecraft:terracotta", MarketCategory.BUILDING, 20, 9, 0.12);
+        add(l, "minecraft:glass", MarketCategory.BUILDING, 14, 6, 0.12);
+        add(l, "minecraft:white_concrete", MarketCategory.BUILDING, 22, 10, 0.12);
+        add(l, "minecraft:gray_concrete", MarketCategory.BUILDING, 22, 10, 0.12);
+        add(l, "minecraft:black_concrete", MarketCategory.BUILDING, 22, 10, 0.12);
+        add(l, "minecraft:quartz_block", MarketCategory.BUILDING, 95, 50, 0.12);
+        add(l, "minecraft:obsidian", MarketCategory.BUILDING, 150, 80, 0.10);
+        add(l, "minecraft:oak_log", MarketCategory.WOOD, 16, 8, 0.15);
+        add(l, "minecraft:spruce_log", MarketCategory.WOOD, 16, 8, 0.15);
+        add(l, "minecraft:birch_log", MarketCategory.WOOD, 16, 8, 0.15);
+        add(l, "minecraft:jungle_log", MarketCategory.WOOD, 18, 9, 0.15);
+        add(l, "minecraft:acacia_log", MarketCategory.WOOD, 18, 9, 0.15);
+        add(l, "minecraft:dark_oak_log", MarketCategory.WOOD, 18, 9, 0.15);
+        add(l, "minecraft:mangrove_log", MarketCategory.WOOD, 20, 10, 0.15);
+        add(l, "minecraft:cherry_log", MarketCategory.WOOD, 22, 11, 0.15);
+        add(l, "minecraft:oak_planks", MarketCategory.WOOD, 5, 2, 0.15);
+        add(l, "minecraft:spruce_planks", MarketCategory.WOOD, 5, 2, 0.15);
+        add(l, "minecraft:birch_planks", MarketCategory.WOOD, 5, 2, 0.15);
+        add(l, "minecraft:chest", MarketCategory.WOOD, 45, 20, 0.12);
+        add(l, "minecraft:barrel", MarketCategory.WOOD, 40, 18, 0.12);
+    }
+}

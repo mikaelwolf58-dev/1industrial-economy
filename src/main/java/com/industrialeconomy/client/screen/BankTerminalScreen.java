@@ -30,9 +30,9 @@ public class BankTerminalScreen extends AbstractContainerScreen<BankTerminalMenu
     @Override public void render(GuiGraphics g, int mx, int my, float pt) {
         this.renderBackground(g); super.render(g, mx, my, pt);
         int x = (this.width - this.imageWidth) / 2; int y = (this.height - this.imageHeight) / 2;
-        g.drawString(this.font, "В§aBANK TERMINAL", x + 20, y + 12, 0xFFFFFF);
-        g.drawString(this.font, String.format("Cash (Risk): В§e%,d$", ClientFinanceData.getCash()), x + 20, y + 30, 0xFFFFFF);
-        g.drawString(this.font, String.format("Bank (Safe): В§b%,d$", ClientFinanceData.getBank()), x + 20, y + 44, 0xFFFFFF);
+        g.drawString(this.font, "ATM TERMINAL", x + 20, y + 12, 0x55FF55);
+        g.drawString(this.font, String.format("Cash (Risk): %,d$", ClientFinanceData.getCash()), x + 20, y + 30, 0xFFFF55);
+        g.drawString(this.font, String.format("Bank (Safe): %,d$", ClientFinanceData.getBank()), x + 20, y + 44, 0x55FFFF);
         this.renderTooltip(g, mx, my);
     }
     @Override protected void renderLabels(GuiGraphics g, int mx, int my) {}

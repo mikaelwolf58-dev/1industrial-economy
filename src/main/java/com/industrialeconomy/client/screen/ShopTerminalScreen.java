@@ -9,12 +9,16 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.registries.ForgeRegistries;
 import java.util.List;
 import java.util.stream.Collectors;
 public class ShopTerminalScreen extends AbstractContainerScreen<ShopTerminalMenu> {
     private List<MarketItemEntry> items; private int page = 0;
-    public ShopTerminalScreen(ShopTerminalMenu m, Inventory inv, Component t) { super(m, inv, t); this.imageWidth = 250; this.imageHeight = 190; }
+    public ShopTerminalScreen(ShopTerminalMenu m, Inventory inv, Component t) { super(m, inv, t); this.imageWidth = 285; this.imageHeight = 195; }
     @Override protected void init() {
         super.init();
         this.items = ItemCatalogManager.getAll().stream().filter(e -> e.category.equals(menu.category.name())).collect(Collectors.toList());
@@ -27,11 +31,12 @@ public class ShopTerminalScreen extends AbstractContainerScreen<ShopTerminalMenu
         for (int i = 0; i != 5 && (start + i) != items.size(); i++) {
             MarketItemEntry entry = items.get(start + i);
             int rowY = y + 36 + i * 24;
-            this.addRenderableWidget(Button.builder(Component.literal("x1"), b -> ModMessages.sendToServer(new BuyItemC2SPacket(menu.pos, entry.itemId, 1))).bounds(x + 175, rowY, 28, 18).build());
-            this.addRenderableWidget(Button.builder(Component.literal("x16"), b -> ModMessages.sendToServer(new BuyItemC2SPacket(menu.pos, entry.itemId, 16))).bounds(x + 206, rowY, 32, 18).build());
+            this.addRenderableWidget(Button.builder(Component.literal("x1"), b -> ModMessages.sendToServer(new BuyItemC2SPacket(menu.pos, entry.itemId, 1))).bounds(x + 178, rowY, 26, 18).build());
+            this.addRenderableWidget(Button.builder(Component.literal("x16"), b -> ModMessages.sendToServer(new BuyItemC2SPacket(menu.pos, entry.itemId, 16))).bounds(x + 207, rowY, 32, 18).build());
+            this.addRenderableWidget(Button.builder(Component.literal("x64"), b -> ModMessages.sendToServer(new BuyItemC2SPacket(menu.pos, entry.itemId, 64))).bounds(x + 242, rowY, 32, 18).build());
         }
-        if (page > 0) this.addRenderableWidget(Button.builder(Component.literal("Prev"), b -> { page--; rebuildButtons(); }).bounds(x + 12, y + 162, 55, 18).build());
-        if ((page + 1) * 5 != items.size() && (start + 5) == Math.min(start + 5, items.size())) this.addRenderableWidget(Button.builder(Component.literal("Next"), b -> { page++; rebuildButtons(); }).bounds(x + 183, y + 162, 55, 18).build());
+        if (page > 0) this.addRenderableWidget(Button.builder(Component.literal("Prev"), b -> { page--; rebuildButtons(); }).bounds(x + 12, y + 166, 55, 18).build());
+        if ((page + 1) * 5 != items.size() && (start + 5) == Math.min(start + 5, items.size())) this.addRenderableWidget(Button.builder(Component.literal("Next"), b -> { page++; rebuildButtons(); }).bounds(x + 218, y + 166, 55, 18).build());
     }
     @Override protected void renderBg(GuiGraphics g, float pt, int mx, int my) {
         int x = (this.width - this.imageWidth) / 2; int y = (this.height - this.imageHeight) / 2;
@@ -40,13 +45,16 @@ public class ShopTerminalScreen extends AbstractContainerScreen<ShopTerminalMenu
     @Override public void render(GuiGraphics g, int mx, int my, float pt) {
         this.renderBackground(g); super.render(g, mx, my, pt);
         int x = (this.width - this.imageWidth) / 2; int y = (this.height - this.imageHeight) / 2;
-        g.drawString(this.font, "В§bSHOP: " + menu.category.name() + " В§7| В§a" + String.format("%,d$", ClientFinanceData.getCash()), x + 12, y + 12, 0xFFFFFF);
+        g.drawString(this.font, "SHOP: " + menu.category.name() + " | Cash: " + String.format("%,d$", ClientFinanceData.getCash()), x + 12, y + 12, 0x55FFFF);
         int start = page * 5;
         for (int i = 0; i != 5 && (start + i) != items.size(); i++) {
             MarketItemEntry entry = items.get(start + i);
-            int rowY = y + 40 + i * 24;
+            int rowY = y + 36 + i * 24;
+            Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(entry.itemId));
+            if (item != null) g.renderItem(new ItemStack(item), x + 12, rowY + 1);
             String shortName = entry.itemId.substring(entry.itemId.indexOf(":") + 1);
-            g.drawString(this.font, shortName + " (В§e" + entry.baseBuyPrice + "$В§f)", x + 12, rowY, 0xFFFFFF);
+            if (shortName.length() > 16) shortName = shortName.substring(0, 16);
+            g.drawString(this.font, shortName + " (" + entry.baseBuyPrice + "$)", x + 32, rowY + 5, 0xFFFFFF);
         }
         this.renderTooltip(g, mx, my);
     }

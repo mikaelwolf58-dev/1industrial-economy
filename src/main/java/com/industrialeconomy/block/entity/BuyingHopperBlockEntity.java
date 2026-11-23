@@ -1,12 +1,10 @@
 package com.industrialeconomy.block.entity;
 import com.industrialeconomy.block.BuyingHopperBlock;
-import com.industrialeconomy.economy.EconomySavedData;
-import com.industrialeconomy.economy.ItemCatalogManager;
-import com.industrialeconomy.economy.MarketCategory;
-import com.industrialeconomy.economy.MarketItemEntry;
+import com.industrialeconomy.economy.*;
 import com.industrialeconomy.event.FinanceEvents;
 import com.industrialeconomy.finance.PlayerFinanceProvider;
 import com.industrialeconomy.registry.ModBlockEntities;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -39,8 +37,7 @@ public class BuyingHopperBlockEntity extends BlockEntity {
             MarketItemEntry entry = ItemCatalogManager.getItem(id);
             if (entry != null && entry.category.equals(cat.name())) {
                 int count = stack.getCount();
-                long unitPrice = eco.getDynamicSellPrice(id);
-                totalEarned += unitPrice * count;
+                totalEarned += eco.getDynamicSellPrice(id) * count;
                 eco.recordItemSold(id, count);
                 entity.discard();
             }
@@ -50,7 +47,7 @@ public class BuyingHopperBlockEntity extends BlockEntity {
             nearest.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
                 f.addCash(reward);
                 FinanceEvents.syncToClient(nearest, f);
-                nearest.displayClientMessage(Component.literal("В§aSold cargo: +" + String.format("%,d$", reward)), true);
+                nearest.displayClientMessage(Component.literal("Sold cargo: +" + String.format("%,d$", reward)).withStyle(ChatFormatting.GREEN), true);
             });
         }
     }

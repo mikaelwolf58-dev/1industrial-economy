@@ -1,9 +1,8 @@
 package com.industrialeconomy.network.packet;
-import com.industrialeconomy.economy.EconomySavedData;
-import com.industrialeconomy.economy.ItemCatalogManager;
-import com.industrialeconomy.economy.MarketItemEntry;
+import com.industrialeconomy.economy.*;
 import com.industrialeconomy.event.FinanceEvents;
 import com.industrialeconomy.finance.PlayerFinanceProvider;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -11,8 +10,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -31,18 +29,18 @@ public class BuyItemC2SPacket {
             if (entry == null) return;
             ServerLevel level = player.serverLevel();
             Container targetChest = findNearbyChest(level, terminalPos, 10);
-            if (targetChest == null) { player.sendSystemMessage(Component.literal("В§cNo delivery chest found near terminal (radius 10)!")); return; }
+            if (targetChest == null) { player.sendSystemMessage(Component.literal("No delivery chest found near terminal (radius 10)!").withStyle(ChatFormatting.RED)); return; }
             EconomySavedData eco = EconomySavedData.get(level);
             long totalCost = eco.getDynamicBuyPrice(itemId) * count;
             Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(itemId));
             if (item == null) return;
             player.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
-                if (!f.spendCash(totalCost)) { player.sendSystemMessage(Component.literal("В§cNot enough cash! Need: " + totalCost + "$")); return; }
+                if (!f.spendCash(totalCost)) { player.sendSystemMessage(Component.literal("Not enough cash! Need: " + totalCost + "$").withStyle(ChatFormatting.RED)); return; }
                 ItemStack toInsert = new ItemStack(item, count);
                 ItemStack rem = insertIntoContainer(targetChest, toInsert);
                 if (!rem.isEmpty()) player.getInventory().placeItemBackInInventory(rem);
                 FinanceEvents.syncToClient(player, f);
-                player.sendSystemMessage(Component.literal("В§aPurchased " + count + "x " + itemId + " -> delivered to pallet chest!"));
+                player.sendSystemMessage(Component.literal("Purchased " + count + "x " + itemId + " -> pallet chest").withStyle(ChatFormatting.GREEN));
             });
         });
         return true;
