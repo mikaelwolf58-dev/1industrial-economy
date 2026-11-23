@@ -9,7 +9,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import java.util.Random;
 public class PlotCommand {
     public static void register(CommandDispatcher<CommandSourceStack> d) {
         d.register(Commands.literal("plot").requires(s -> s.hasPermission(2))
@@ -31,7 +30,7 @@ public class PlotCommand {
     private static int create(CommandSourceStack src, PlotTier tier) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         ServerPlayer sp = src.getPlayerOrException(); ServerLevel sl = sp.serverLevel();
         BlockPos start = sp.blockPosition().offset(2, 0, 2);
-        SpecializedStructures.buildIndustrialZone(sl, WorldHubSavedData.get(sl), start, new Random());
+        SpecializedStructures.buildIndustrialZone(sl, WorldHubSavedData.get(sl), start, tier);
         src.sendSuccess(() -> Component.literal("Created & leveled " + tier.name() + " plot!").withStyle(ChatFormatting.GREEN), false);
         return 1;
     }
