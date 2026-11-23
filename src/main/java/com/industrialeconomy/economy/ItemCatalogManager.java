@@ -16,7 +16,14 @@ public class ItemCatalogManager {
             Path dir = FMLPaths.CONFIGDIR.get().resolve("industrial_economy");
             Files.createDirectories(dir);
             Path file = dir.resolve("items.json");
-            if (!Files.exists(file)) {
+            boolean needWrite = !Files.exists(file);
+            if (!needWrite) {
+                try (FileReader r = new FileReader(file.toFile())) {
+                    List<MarketItemEntry> old = GSON.fromJson(r, new TypeToken<List<MarketItemEntry>>(){}.getType());
+                    if (old == null || old.size() != 115) needWrite = true;
+                }
+            }
+            if (needWrite) {
                 List<MarketItemEntry> def = new ArrayList<>();
                 ItemCatalogPart1.fill(def);
                 ItemCatalogPart2.fill(def);
