@@ -1,8 +1,8 @@
 package com.industrialeconomy.network.packet;
-import com.industrialeconomy.block.PlotSignBlock;
 import com.industrialeconomy.event.FinanceEvents;
 import com.industrialeconomy.finance.PlayerFinanceProvider;
 import com.industrialeconomy.plot.*;
+import com.industrialeconomy.registry.ModBlocks;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -37,21 +37,28 @@ public class PlotActionC2SPacket {
                     sp.sendSystemMessage(Component.literal("Purchased Plot #" + plot.id + " (" + plot.tier.size + "x" + plot.tier.size + ")!").withStyle(ChatFormatting.GREEN));
                 } else {
                     if (plot.ownerId == null || !plot.ownerId.equals(sp.getUUID())) return;
-                    clearPlotArea(sl, plot);
+                    clearAndRestorePlot(sl, plot);
                     long refund = plot.tier.price / 2L;
                     plot.ownerId = null; plot.ownerName = null;
                     f.addCash(refund); data.setDirty(); FinanceEvents.syncToClient(sp, f);
-                    sp.sendSystemMessage(Component.literal("Sold Plot #" + plot.id + " for +" + String.format("%,d$", refund) + ". All items inside cleared.").withStyle(ChatFormatting.YELLOW));
+                    sp.sendSystemMessage(Component.literal("Sold Plot #" + plot.id + " for +" + String.format("%,d$", refund) + ". Plot cleared and fence restored.").withStyle(ChatFormatting.YELLOW));
                 }
             });
         });
         return true;
     }
-    private static void clearPlotArea(ServerLevel sl, IndustrialPlot plot) {
-        for (BlockPos p : BlockPos.betweenClosed(new BlockPos(plot.minX, plot.baseY + 1, plot.minZ), new BlockPos(plot.maxX, plot.baseY + 32, plot.maxZ))) {
-            if (!(sl.getBlockState(p).getBlock() instanceof PlotSignBlock)) sl.setBlock(p, Blocks.AIR.defaultBlockState(), 3);
+    private static void clearAndRestorePlot(ServerLevel sl, IndustrialPlot plot) {
+        for (BlockPos p : BlockPos.betweenClosed(new BlockPos(plot.minX, plot.baseY, plot.minZ), new BlockPos(plot.maxX, plot.baseY + 32, plot.maxZ))) {
+            sl.setBlock(p, Blocks.AIR.defaultBlockState(), 3);
         }
-        AABB box = new AABB(plot.minX, plot.baseY, plot.minZ, plot.maxX + 1, plot.baseY + 33, plot.maxZ + 1);
+        for (int i = 0; i != plot.tier.size; i++) {
+            sl.setBlock(new BlockPos(plot.minX + i, plot.baseY, plot.minZ), Blocks.SMOOTH_STONE_SLAB.defaultBlockState(), 3);
+            sl.setBlock(new BlockPos(plot.minX + i, plot.baseY, plot.maxZ), Blocks.SMOOTH_STONE_SLAB.defaultBlockState(), 3);
+            sl.setBlock(new BlockPos(plot.minX, plot.baseY, plot.minZ + i), Blocks.SMOOTH_STONE_SLAB.defaultBlockState(), 3);
+            sl.setBlock(new BlockPos(plot.maxX, plot.baseY, plot.minZ + i), Blocks.SMOOTH_STONE_SLAB.defaultBlockState(), 3);
+        }
+        sl.setBlock(new BlockPos(plot.minX, plot.baseY + 1, plot.minZ), ModBlocks.PLOT_SIGN.get().defaultBlockState(), 3);
+        AABB box = new AABB(plot.minX, plot.baseY - 1, plot.minZ, plot.maxX + 1, plot.baseY + 33, plot.maxZ + 1);
         for (ItemEntity item : sl.getEntitiesOfClass(ItemEntity.class, box)) item.discard();
     }
 }
