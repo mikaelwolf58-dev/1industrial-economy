@@ -15,7 +15,7 @@ public class IndustrialEconomy {
     public static final Logger LOGGER = LoggerFactory.getLogger(MODID);
     public IndustrialEconomy() {
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
-        ModBlocks.register(bus); ModItems.register(bus); ModMenuTypes.register(bus); ModCreativeTabs.register(bus);
+        ModBlocks.register(bus); ModItems.register(bus); ModBlockEntities.register(bus); ModMenuTypes.register(bus); ModCreativeTabs.register(bus);
         bus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);
     }
