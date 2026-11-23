@@ -1,14 +1,13 @@
 package com.industrialeconomy.event;
 import com.industrialeconomy.IndustrialEconomy;
-import com.industrialeconomy.command.EcoCommand;
-import com.industrialeconomy.command.PlotCommand;
-import com.industrialeconomy.economy.EconomySavedData;
-import com.industrialeconomy.economy.RecipeBlocker;
-import com.industrialeconomy.finance.PlayerFinanceData;
-import com.industrialeconomy.finance.PlayerFinanceProvider;
+import com.industrialeconomy.command.*;
+import com.industrialeconomy.economy.*;
+import com.industrialeconomy.finance.*;
 import com.industrialeconomy.network.ModMessages;
 import com.industrialeconomy.network.packet.SyncFinanceS2CPacket;
 import com.industrialeconomy.plot.InspectionManager;
+import com.industrialeconomy.registry.ModItems;
+import com.industrialeconomy.world.WorldInfrastructureGenerator;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -16,11 +15,9 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
-import net.minecraftforge.event.AttachCapabilitiesEvent;
-import net.minecraftforge.event.OnDatapackSyncEvent;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.*;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
@@ -35,6 +32,7 @@ public class FinanceEvents {
         if (event.phase == TickEvent.Phase.END && !event.level.isClientSide && event.level instanceof ServerLevel sl && sl.dimension() == ServerLevel.OVERWORLD) {
             if (sl.getGameTime() % 1200 == 0) EconomySavedData.get(sl).tickMarketRecovery();
             if (sl.getGameTime() % 400 == 0) InspectionManager.tickInspection(sl);
+            if (sl.getGameTime() % 100 == 0) WorldInfrastructureGenerator.tickWorldGen(sl);
         }
     }
     @SubscribeEvent public static void onAttach(AttachCapabilitiesEvent<Entity> event) {
@@ -57,7 +55,12 @@ public class FinanceEvents {
             event.getOriginal().invalidateCaps();
         }
     }
-    @SubscribeEvent public static void onLogin(PlayerEvent.PlayerLoggedInEvent event) { if (event.getEntity() instanceof ServerPlayer p) p.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> syncToClient(p, f)); }
+    @SubscribeEvent public static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.getEntity() instanceof ServerPlayer p) {
+            p.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> syncToClient(p, f));
+            if (!p.getTags().contains("ie_got_paper")) { p.addTag("ie_got_paper"); p.getInventory().add(new ItemStack(ModItems.NEWSPAPER.get())); }
+        }
+    }
     @SubscribeEvent public static void onRespawn(PlayerEvent.PlayerRespawnEvent event) { if (event.getEntity() instanceof ServerPlayer p) p.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> syncToClient(p, f)); }
     @SubscribeEvent public static void onRegCap(RegisterCapabilitiesEvent event) { event.register(PlayerFinanceData.class); }
     public static void syncToClient(ServerPlayer player, PlayerFinanceData f) { ModMessages.sendToPlayer(new SyncFinanceS2CPacket(f.getCash(), f.getBankBalance()), player); }
