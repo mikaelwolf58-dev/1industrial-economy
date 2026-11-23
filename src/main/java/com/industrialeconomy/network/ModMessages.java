@@ -15,6 +15,7 @@ public class ModMessages {
         net.messageBuilder(SyncFinanceS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT).decoder(SyncFinanceS2CPacket::new).encoder(SyncFinanceS2CPacket::toBytes).consumerMainThread(SyncFinanceS2CPacket::handle).add();
         net.messageBuilder(BankTransactionC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER).decoder(BankTransactionC2SPacket::new).encoder(BankTransactionC2SPacket::toBytes).consumerMainThread(BankTransactionC2SPacket::handle).add();
         net.messageBuilder(BuyItemC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER).decoder(BuyItemC2SPacket::new).encoder(BuyItemC2SPacket::toBytes).consumerMainThread(BuyItemC2SPacket::handle).add();
+        net.messageBuilder(PlotActionC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER).decoder(PlotActionC2SPacket::new).encoder(PlotActionC2SPacket::toBytes).consumerMainThread(PlotActionC2SPacket::handle).add();
     }
     public static <MSG> void sendToServer(MSG msg) { INSTANCE.sendToServer(msg); }
     public static <MSG> void sendToPlayer(MSG msg, ServerPlayer p) { INSTANCE.send(PacketDistributor.PLAYER.with(() -> p), msg); }

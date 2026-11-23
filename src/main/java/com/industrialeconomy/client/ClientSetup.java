@@ -12,5 +12,6 @@ public class ClientSetup {
     @SubscribeEvent public static void onClientSetup(FMLClientSetupEvent event) { event.enqueueWork(() -> {
         MenuScreens.register(ModMenuTypes.BANK_TERMINAL_MENU.get(), BankTerminalScreen::new);
         MenuScreens.register(ModMenuTypes.SHOP_TERMINAL_MENU.get(), ShopTerminalScreen::new);
+        MenuScreens.register(ModMenuTypes.PLOT_MENU.get(), PlotScreen::new);
     }); }
 }

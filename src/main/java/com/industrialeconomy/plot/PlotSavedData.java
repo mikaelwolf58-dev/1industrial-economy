@@ -22,6 +22,7 @@ public class PlotSavedData extends SavedData {
         tag.put("Plots", list); return tag;
     }
     public void addPlot(IndustrialPlot p) { plots.put(p.id, p); setDirty(); }
+    public int nextNumber() { return plots.size() + 1; }
     public IndustrialPlot getPlotAt(BlockPos pos) { for (IndustrialPlot p : plots.values()) if (p.contains(pos)) return p; return null; }
     public IndustrialPlot getPlotById(String id) { return plots.get(id); }
     public Collection<IndustrialPlot> getAll() { return plots.values(); }

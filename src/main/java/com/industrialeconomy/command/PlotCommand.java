@@ -23,7 +23,7 @@ public class PlotCommand {
                 ServerPlayer p = c.getSource().getPlayerOrException();
                 IndustrialPlot plot = PlotSavedData.get(p.serverLevel()).getPlotAt(p.blockPosition());
                 if (plot == null) c.getSource().sendSuccess(() -> Component.literal("Wilderness (Max 2 machines/type, 0 Steam Engines)"), false);
-                else c.getSource().sendSuccess(() -> Component.literal("Plot " + plot.tier.name() + " (" + plot.tier.size + "x" + plot.tier.size + ", Limit: " + plot.tier.maxMachinesPerType + "/type, Steam: " + plot.tier.maxSteamEngines + ") | Owner: " + (plot.ownerName == null ? "FOR SALE (" + plot.tier.price + "$)" : plot.ownerName)), false);
+                else c.getSource().sendSuccess(() -> Component.literal("Plot #" + plot.id + " [" + plot.tier.name() + "] | Owner: " + (plot.ownerName == null ? "FOR SALE" : plot.ownerName)), false);
                 return 1;
             }))
         );
@@ -31,9 +31,10 @@ public class PlotCommand {
     private static int create(CommandSourceStack src, PlotTier tier) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         ServerPlayer sp = src.getPlayerOrException(); ServerLevel sl = sp.serverLevel();
         BlockPos start = sp.blockPosition().offset(2, 0, 2);
-        String id = "plot_" + start.getX() + "_" + start.getZ();
+        PlotSavedData data = PlotSavedData.get(sl);
+        String id = String.format("%03d", data.nextNumber());
         IndustrialPlot plot = new IndustrialPlot(id, tier, start.getX(), start.getZ(), start.getY());
-        PlotSavedData.get(sl).addPlot(plot);
+        data.addPlot(plot);
         for (int i = 0; i != tier.size; i++) {
             sl.setBlock(new BlockPos(plot.minX + i, plot.baseY, plot.minZ), Blocks.SMOOTH_STONE_SLAB.defaultBlockState(), 3);
             sl.setBlock(new BlockPos(plot.minX + i, plot.baseY, plot.maxZ), Blocks.SMOOTH_STONE_SLAB.defaultBlockState(), 3);
@@ -41,7 +42,7 @@ public class PlotCommand {
             sl.setBlock(new BlockPos(plot.maxX, plot.baseY, plot.minZ + i), Blocks.SMOOTH_STONE_SLAB.defaultBlockState(), 3);
         }
         sl.setBlock(new BlockPos(plot.minX, plot.baseY + 1, plot.minZ), ModBlocks.PLOT_SIGN.get().defaultBlockState(), 3);
-        src.sendSuccess(() -> Component.literal("Created " + tier.name() + " plot (" + tier.size + "x" + tier.size + ") for " + tier.price + "$").withStyle(ChatFormatting.GREEN), false);
+        src.sendSuccess(() -> Component.literal("Created Plot #" + id + " (" + tier.size + "x" + tier.size + ") for " + String.format("%,d$", tier.price)).withStyle(ChatFormatting.GREEN), false);
         return 1;
     }
 }
