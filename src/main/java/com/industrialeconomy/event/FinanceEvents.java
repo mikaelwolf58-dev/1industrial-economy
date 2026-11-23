@@ -1,12 +1,14 @@
 package com.industrialeconomy.event;
 import com.industrialeconomy.IndustrialEconomy;
 import com.industrialeconomy.command.EcoCommand;
+import com.industrialeconomy.command.PlotCommand;
 import com.industrialeconomy.economy.EconomySavedData;
 import com.industrialeconomy.economy.RecipeBlocker;
 import com.industrialeconomy.finance.PlayerFinanceData;
 import com.industrialeconomy.finance.PlayerFinanceProvider;
 import com.industrialeconomy.network.ModMessages;
 import com.industrialeconomy.network.packet.SyncFinanceS2CPacket;
+import com.industrialeconomy.plot.InspectionManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -28,10 +30,11 @@ import net.minecraftforge.fml.common.Mod;
 public class FinanceEvents {
     @SubscribeEvent public static void onServerStarted(ServerStartedEvent e) { RecipeBlocker.filterCraftingRecipes(e.getServer()); }
     @SubscribeEvent public static void onDatapackSync(OnDatapackSyncEvent e) { if (e.getPlayer() == null) RecipeBlocker.filterCraftingRecipes(e.getPlayerList().getServer()); }
-    @SubscribeEvent public static void onCommands(RegisterCommandsEvent event) { EcoCommand.register(event.getDispatcher()); }
+    @SubscribeEvent public static void onCommands(RegisterCommandsEvent event) { EcoCommand.register(event.getDispatcher()); PlotCommand.register(event.getDispatcher()); }
     @SubscribeEvent public static void onLevelTick(TickEvent.LevelTickEvent event) {
         if (event.phase == TickEvent.Phase.END && !event.level.isClientSide && event.level instanceof ServerLevel sl && sl.dimension() == ServerLevel.OVERWORLD) {
             if (sl.getGameTime() % 1200 == 0) EconomySavedData.get(sl).tickMarketRecovery();
+            if (sl.getGameTime() % 400 == 0) InspectionManager.tickInspection(sl);
         }
     }
     @SubscribeEvent public static void onAttach(AttachCapabilitiesEvent<Entity> event) {
