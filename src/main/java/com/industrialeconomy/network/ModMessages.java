@@ -17,6 +17,7 @@ public class ModMessages {
         net.messageBuilder(BuyItemC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER).decoder(BuyItemC2SPacket::new).encoder(BuyItemC2SPacket::toBytes).consumerMainThread(BuyItemC2SPacket::handle).add();
         net.messageBuilder(PlotActionC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER).decoder(PlotActionC2SPacket::new).encoder(PlotActionC2SPacket::toBytes).consumerMainThread(PlotActionC2SPacket::handle).add();
         net.messageBuilder(BuyPatentC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER).decoder(BuyPatentC2SPacket::new).encoder(BuyPatentC2SPacket::toBytes).consumerMainThread(BuyPatentC2SPacket::handle).add();
+        net.messageBuilder(UpgradeCorpC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER).decoder(UpgradeCorpC2SPacket::new).encoder(UpgradeCorpC2SPacket::toBytes).consumerMainThread(UpgradeCorpC2SPacket::handle).add();
     }
     public static <MSG> void sendToServer(MSG msg) { INSTANCE.sendToServer(msg); }
     public static <MSG> void sendToPlayer(MSG msg, ServerPlayer p) { INSTANCE.send(PacketDistributor.PLAYER.with(() -> p), msg); }

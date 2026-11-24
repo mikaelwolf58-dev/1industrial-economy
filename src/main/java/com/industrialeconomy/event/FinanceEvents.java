@@ -32,9 +32,19 @@ public class FinanceEvents {
     @SubscribeEvent public static void onCommands(RegisterCommandsEvent event) { EcoCommand.register(event.getDispatcher()); PlotCommand.register(event.getDispatcher()); }
     @SubscribeEvent public static void onLevelTick(TickEvent.LevelTickEvent event) {
         if (event.phase == TickEvent.Phase.END && !event.level.isClientSide && event.level instanceof ServerLevel sl && sl.dimension() == ServerLevel.OVERWORLD) {
-            if (sl.getGameTime() % 1200 == 0) EconomySavedData.get(sl).tickMarketRecovery();
-            if (sl.getGameTime() % 400 == 0) InspectionManager.tickInspection(sl);
-            if (sl.getGameTime() % 100 == 0) WorldInfrastructureGenerator.tickWorldGen(sl);
+            long gt = sl.getGameTime();
+            if (gt % 1200 == 0) EconomySavedData.get(sl).tickMarketRecovery();
+            if (gt % 400 == 0) InspectionManager.tickInspection(sl);
+            if (gt % 100 == 0) WorldInfrastructureGenerator.tickWorldGen(sl);
+            if (gt > 0 && gt % 168000 == 0) {
+                for (ServerPlayer sp : sl.players()) sp.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
+                    if (f.getBankBalance() > 0) {
+                        long interest = Math.round(f.getBankBalance() * 0.02);
+                        f.addBank(interest); syncToClient(sp, f);
+                        sp.sendSystemMessage(Component.literal("Weekly Bank Interest (+2%): +" + String.format("%,d$", interest)).withStyle(ChatFormatting.GOLD));
+                    }
+                });
+            }
         }
     }
     @SubscribeEvent public static void onAttach(AttachCapabilitiesEvent<Entity> event) {
@@ -72,6 +82,6 @@ public class FinanceEvents {
         for (MarketItemEntry e : ItemCatalogManager.getAll()) prices.put(e.itemId, new ClientFinanceData.PricePair(eco.getDynamicBuyPrice(e.itemId), eco.getDynamicSellPrice(e.itemId)));
         List<ClientFinanceData.HubLine> hubs = new ArrayList<>();
         for (var h : WorldHubSavedData.get(sl).getHubs()) hubs.add(new ClientFinanceData.HubLine(h.type(), h.x(), h.y(), h.z()));
-        ModMessages.sendToPlayer(new SyncFinanceS2CPacket(f.getCash(), f.getBankBalance(), f.getPatentMask(), prices, hubs), player);
+        ModMessages.sendToPlayer(new SyncFinanceS2CPacket(f.getCash(), f.getBankBalance(), f.getPatentMask(), f.getCorpLevel(), prices, hubs), player);
     }
 }

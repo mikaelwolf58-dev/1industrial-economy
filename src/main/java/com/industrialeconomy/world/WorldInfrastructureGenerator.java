@@ -7,11 +7,17 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.Blocks;
 import java.util.Random;
 public class WorldInfrastructureGenerator {
+    private static boolean isTooClose(WorldHubSavedData data, BlockPos pos) {
+        for (var h : data.getHubs()) {
+            if (Math.hypot(h.x() - pos.getX(), h.z() - pos.getZ()) < 95.0) return true;
+        }
+        return false;
+    }
     public static void tickWorldGen(ServerLevel level) {
         WorldHubSavedData data = WorldHubSavedData.get(level);
         for (ServerPlayer sp : level.players()) {
-            int rx = Math.floorDiv(sp.blockPosition().getX(), 96);
-            int rz = Math.floorDiv(sp.blockPosition().getZ(), 96);
+            int rx = Math.floorDiv(sp.blockPosition().getX(), 112);
+            int rz = Math.floorDiv(sp.blockPosition().getZ(), 112);
             for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) {
                 int crx = rx + dx; int crz = rz + dz;
                 if (!data.markRegionChecked(crx, crz)) continue;
@@ -23,11 +29,12 @@ public class WorldInfrastructureGenerator {
         Random rnd = new Random(level.getSeed() ^ (rx * 341873128712L + rz * 132897987541L));
         int roll = Math.floorMod(rx * 7 + rz * 13, 18);
         for (int attempt = 0; attempt != 60; attempt++) {
-            int cx = rx * 96 + 8 + rnd.nextInt(76);
-            int cz = rz * 96 + 8 + rnd.nextInt(76);
+            int cx = rx * 112 + 8 + rnd.nextInt(90);
+            int cz = rz * 112 + 8 + rnd.nextInt(90);
             int groundY = StructureBuilderHelper.findGroundY(level, cx, cz);
             if (groundY == -1) continue;
             BlockPos o = new BlockPos(cx, groundY, cz);
+            if (isTooClose(data, o)) continue;
             if (roll <= 7) {
                 PlotTier[] tiers = {PlotTier.MICRO, PlotTier.SMALL, PlotTier.MEDIUM, PlotTier.LARGE};
                 SpecializedStructures.buildIndustrialZone(level, data, o, tiers[rnd.nextInt(tiers.length)]);

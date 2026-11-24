@@ -2,63 +2,42 @@ package com.industrialeconomy.network.packet;
 import com.industrialeconomy.event.FinanceEvents;
 import com.industrialeconomy.finance.PlayerFinanceProvider;
 import com.industrialeconomy.plot.*;
-import com.industrialeconomy.registry.ModBlocks;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.phys.AABB;
+import net.minecraft.server.level.*;
 import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 public class PlotActionC2SPacket {
-    private final String plotId; private final boolean isSell;
-    public PlotActionC2SPacket(String plotId, boolean isSell) { this.plotId = plotId; this.isSell = isSell; }
-    public PlotActionC2SPacket(FriendlyByteBuf buf) { this.plotId = buf.readUtf(); this.isSell = buf.readBoolean(); }
-    public void toBytes(FriendlyByteBuf buf) { buf.writeUtf(plotId); buf.writeBoolean(isSell); }
+    private final String plotId; private final boolean isBuy;
+    public PlotActionC2SPacket(String plotId, boolean isBuy) { this.plotId = plotId; this.isBuy = isBuy; }
+    public PlotActionC2SPacket(FriendlyByteBuf buf) { this.plotId = buf.readUtf(); this.isBuy = buf.readBoolean(); }
+    public void toBytes(FriendlyByteBuf buf) { buf.writeUtf(plotId); buf.writeBoolean(isBuy); }
     public boolean handle(Supplier<NetworkEvent.Context> sup) {
-        NetworkEvent.Context ctx = sup.get();
-        ctx.enqueueWork(() -> {
-            ServerPlayer sp = ctx.getSender();
-            if (sp == null) return;
-            ServerLevel sl = sp.serverLevel();
-            PlotSavedData data = PlotSavedData.get(sl);
-            IndustrialPlot plot = data.getPlotById(plotId);
-            if (plot == null) return;
-            sp.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
-                if (!isSell) {
-                    if (plot.ownerId != null) return;
-                    if (!f.spendCash(plot.tier.price)) { sp.sendSystemMessage(Component.literal("Not enough cash!").withStyle(ChatFormatting.RED)); return; }
-                    plot.ownerId = sp.getUUID(); plot.ownerName = sp.getName().getString();
-                    data.setDirty(); FinanceEvents.syncToClient(sp, f);
-                    sp.sendSystemMessage(Component.literal("Purchased Plot #" + plot.id + " (" + plot.tier.size + "x" + plot.tier.size + ")!").withStyle(ChatFormatting.GREEN));
-                } else {
-                    if (plot.ownerId == null || !plot.ownerId.equals(sp.getUUID())) return;
-                    clearAndRestorePlot(sl, plot);
-                    long refund = plot.tier.price / 2L;
-                    plot.ownerId = null; plot.ownerName = null;
-                    f.addCash(refund); data.setDirty(); FinanceEvents.syncToClient(sp, f);
-                    sp.sendSystemMessage(Component.literal("Sold Plot #" + plot.id + " for +" + String.format("%,d$", refund) + ". Plot cleared and fence restored.").withStyle(ChatFormatting.YELLOW));
+        sup.get().enqueueWork(() -> {
+            ServerPlayer p = sup.get().getSender(); if (p == null) return;
+            ServerLevel sl = p.serverLevel(); PlotSavedData data = PlotSavedData.get(sl);
+            IndustrialPlot plot = data.getById(plotId); if (plot == null) return;
+            p.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
+                if (isBuy && plot.ownerUUID == null) {
+                    long owned = data.getAll().stream().filter(pl -> p.getUUID().equals(pl.ownerUUID)).count();
+                    if (owned >= f.getCorpTier().maxPlots) {
+                        p.sendSystemMessage(Component.literal("Plot limit reached (" + f.getCorpTier().maxPlots + ")! Upgrade Corporation at ATM.").withStyle(ChatFormatting.RED)); return;
+                    }
+                    if (!f.spendBank(plot.price) && !f.spendCash(plot.price)) {
+                        p.sendSystemMessage(Component.literal("Not enough funds!").withStyle(ChatFormatting.RED)); return;
+                    }
+                    plot.ownerUUID = p.getUUID(); plot.ownerName = p.getGameProfile().getName(); data.setDirty();
+                    FinanceEvents.syncToClient(p, f);
+                    p.sendSystemMessage(Component.literal("Purchased Plot #" + plot.id + "!").withStyle(ChatFormatting.GREEN));
+                } else if (!isBuy && p.getUUID().equals(plot.ownerUUID)) {
+                    long refund = Math.round(plot.price * 0.70);
+                    plot.ownerUUID = null; plot.ownerName = null; data.setDirty();
+                    f.addBank(refund); FinanceEvents.syncToClient(p, f);
+                    p.sendSystemMessage(Component.literal("Sold Plot #" + plot.id + " for " + String.format("%,d$", refund)).withStyle(ChatFormatting.YELLOW));
                 }
             });
         });
         return true;
-    }
-    private static void clearAndRestorePlot(ServerLevel sl, IndustrialPlot plot) {
-        for (BlockPos p : BlockPos.betweenClosed(new BlockPos(plot.minX, plot.baseY, plot.minZ), new BlockPos(plot.maxX, plot.baseY + 32, plot.maxZ))) {
-            sl.setBlock(p, Blocks.AIR.defaultBlockState(), 3);
-        }
-        for (int i = 0; i != plot.tier.size; i++) {
-            sl.setBlock(new BlockPos(plot.minX + i, plot.baseY, plot.minZ), Blocks.SMOOTH_STONE_SLAB.defaultBlockState(), 3);
-            sl.setBlock(new BlockPos(plot.minX + i, plot.baseY, plot.maxZ), Blocks.SMOOTH_STONE_SLAB.defaultBlockState(), 3);
-            sl.setBlock(new BlockPos(plot.minX, plot.baseY, plot.minZ + i), Blocks.SMOOTH_STONE_SLAB.defaultBlockState(), 3);
-            sl.setBlock(new BlockPos(plot.maxX, plot.baseY, plot.minZ + i), Blocks.SMOOTH_STONE_SLAB.defaultBlockState(), 3);
-        }
-        sl.setBlock(new BlockPos(plot.minX, plot.baseY + 1, plot.minZ), ModBlocks.PLOT_SIGN.get().defaultBlockState(), 3);
-        AABB box = new AABB(plot.minX, plot.baseY - 1, plot.minZ, plot.maxX + 1, plot.baseY + 33, plot.maxZ + 1);
-        for (ItemEntity item : sl.getEntitiesOfClass(ItemEntity.class, box)) item.discard();
     }
 }

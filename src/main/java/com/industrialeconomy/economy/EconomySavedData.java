@@ -24,14 +24,14 @@ public class EconomySavedData extends SavedData {
         MarketItemEntry e = ItemCatalogManager.getItem(itemId);
         if (e == null) return 0L;
         int off = stockOffset.getOrDefault(itemId, 0);
-        double mult = Math.max(0.4, Math.min(2.5, 1.0 + (off / 64.0) * e.volatility));
+        double mult = Math.max(0.65, Math.min(1.65, 1.0 + (off / 256.0) * e.volatility));
         return Math.max(1L, Math.round(e.baseBuyPrice * mult));
     }
     public long getDynamicSellPrice(String itemId) {
         MarketItemEntry e = ItemCatalogManager.getItem(itemId);
         if (e == null) return 0L;
         int off = stockOffset.getOrDefault(itemId, 0);
-        double mult = Math.max(0.4, Math.min(2.5, 1.0 + (off / 64.0) * e.volatility));
+        double mult = Math.max(0.65, Math.min(1.65, 1.0 + (off / 256.0) * e.volatility));
         return Math.max(1L, Math.round(e.baseSellPrice * mult));
     }
     public long registerSaleAndGetPayout(String itemId, int count) {
@@ -40,8 +40,7 @@ public class EconomySavedData extends SavedData {
             total += getDynamicSellPrice(itemId);
             stockOffset.put(itemId, stockOffset.getOrDefault(itemId, 0) - 1);
         }
-        setDirty();
-        return total;
+        setDirty(); return total;
     }
     public long registerPurchaseAndGetCost(String itemId, int count) {
         long total = 0L;
@@ -49,8 +48,7 @@ public class EconomySavedData extends SavedData {
             total += getDynamicBuyPrice(itemId);
             stockOffset.put(itemId, stockOffset.getOrDefault(itemId, 0) + 1);
         }
-        setDirty();
-        return total;
+        setDirty(); return total;
     }
     public void tickMarketRecovery() {
         if (stockOffset.isEmpty()) return;
@@ -58,8 +56,8 @@ public class EconomySavedData extends SavedData {
         while (it.hasNext()) {
             Map.Entry<String, Integer> entry = it.next();
             int v = entry.getValue();
-            if (v > 0) entry.setValue(Math.max(0, v - 8));
-            else if (v < 0) entry.setValue(Math.min(0, v + 8));
+            if (v > 0) entry.setValue(Math.max(0, v - 12));
+            else if (v < 0) entry.setValue(Math.min(0, v + 12));
             if (entry.getValue() == 0) it.remove();
         }
         setDirty();

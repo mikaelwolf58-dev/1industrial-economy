@@ -45,7 +45,8 @@ public class BuyingHopperBlock extends BaseEntityBlock {
                     if (sl.getGameTime() % 40 == 0) nearest.displayClientMessage(Component.literal("Requires Patent: " + IndustryPatent.byId(entry.patentId).title + " (Buy at ATM)").withStyle(ChatFormatting.RED), true);
                     return;
                 }
-                long totalEarned = EconomySavedData.get(sl).registerSaleAndGetPayout(id.toString(), stack.getCount());
+                long basePay = EconomySavedData.get(sl).registerSaleAndGetPayout(id.toString(), stack.getCount());
+                long totalEarned = Math.round(basePay * (1.0 + f.getCorpTier().sellBonus));
                 f.addCash(totalEarned); FinanceEvents.syncToClient(nearest, f);
                 nearest.displayClientMessage(Component.literal("Sold x" + stack.getCount() + " -> +" + String.format("%,d$", totalEarned)).withStyle(ChatFormatting.GREEN), true);
                 itemEntity.discard();

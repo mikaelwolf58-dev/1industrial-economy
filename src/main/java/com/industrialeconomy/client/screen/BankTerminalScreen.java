@@ -1,6 +1,7 @@
 package com.industrialeconomy.client.screen;
 import com.industrialeconomy.client.ClientFinanceData;
 import com.industrialeconomy.economy.IndustryPatent;
+import com.industrialeconomy.finance.CorporationTier;
 import com.industrialeconomy.menu.BankTerminalMenu;
 import com.industrialeconomy.network.ModMessages;
 import com.industrialeconomy.network.packet.*;
@@ -14,13 +15,14 @@ import net.minecraft.world.item.*;
 import net.minecraftforge.registries.ForgeRegistries;
 public class BankTerminalScreen extends AbstractContainerScreen<BankTerminalMenu> {
     private int tab = 0;
-    public BankTerminalScreen(BankTerminalMenu m, Inventory inv, Component t) { super(m, inv, t); this.imageWidth = 280; this.imageHeight = 200; }
+    public BankTerminalScreen(BankTerminalMenu m, Inventory inv, Component t) { super(m, inv, t); this.imageWidth = 285; this.imageHeight = 205; }
     @Override protected void init() { super.init(); rebuildButtons(); }
     private void rebuildButtons() {
         this.clearWidgets();
         int x = (this.width - this.imageWidth) / 2; int y = (this.height - this.imageHeight) / 2;
-        this.addRenderableWidget(Button.builder(Component.literal("Account / Cash"), b -> { tab = 0; rebuildButtons(); }).bounds(x + 12, y + 8, 125, 18).build());
-        this.addRenderableWidget(Button.builder(Component.literal("Patents (Licenses)"), b -> { tab = 1; rebuildButtons(); }).bounds(x + 143, y + 8, 125, 18).build());
+        this.addRenderableWidget(Button.builder(Component.literal("Account"), b -> { tab = 0; rebuildButtons(); }).bounds(x + 10, y + 8, 84, 18).build());
+        this.addRenderableWidget(Button.builder(Component.literal("Patents"), b -> { tab = 1; rebuildButtons(); }).bounds(x + 100, y + 8, 84, 18).build());
+        this.addRenderableWidget(Button.builder(Component.literal("Corporation"), b -> { tab = 2; rebuildButtons(); }).bounds(x + 190, y + 8, 84, 18).build());
         if (tab == 0) {
             long[] amts = {100L, 1000L, 10000L};
             for (int i = 0; i != 3; i++) {
@@ -30,13 +32,19 @@ public class BankTerminalScreen extends AbstractContainerScreen<BankTerminalMenu
             }
             this.addRenderableWidget(Button.builder(Component.literal("Deposit ALL"), b -> ModMessages.sendToServer(new BankTransactionC2SPacket(true, ClientFinanceData.getCash()))).bounds(x + 16, y + 152, 120, 20).build());
             this.addRenderableWidget(Button.builder(Component.literal("Withdraw ALL"), b -> ModMessages.sendToServer(new BankTransactionC2SPacket(false, Math.max(0L, ClientFinanceData.getBankBalance())))).bounds(x + 144, y + 152, 120, 20).build());
-        } else {
+        } else if (tab == 1) {
             IndustryPatent[] list = {IndustryPatent.FOOD_PROCESSING, IndustryPatent.HEAVY_MATERIALS, IndustryPatent.PRECISION_TECH};
             for (int i = 0; i != 3; i++) {
                 IndustryPatent pat = list[i]; int rowY = y + 36 + i * 52;
                 if (!ClientFinanceData.hasPatent(pat.id)) {
-                    this.addRenderableWidget(Button.builder(Component.literal("Buy (" + String.format("%,d$", pat.price) + ")"), b -> ModMessages.sendToServer(new BuyPatentC2SPacket(pat.id))).bounds(x + 170, rowY + 2, 98, 18).build());
+                    this.addRenderableWidget(Button.builder(Component.literal("Buy (" + String.format("%,d$", pat.price) + ")"), b -> ModMessages.sendToServer(new BuyPatentC2SPacket(pat.id))).bounds(x + 175, rowY + 2, 98, 18).build());
                 }
+            }
+        } else {
+            int lvl = ClientFinanceData.getCorpLevel();
+            if (lvl < 4) {
+                CorporationTier next = CorporationTier.byLevel(lvl + 1);
+                this.addRenderableWidget(Button.builder(Component.literal("Upgrade (" + String.format("%,d$", next.cost) + ")"), b -> ModMessages.sendToServer(new UpgradeCorpC2SPacket())).bounds(x + 16, y + 158, 252, 22).build());
             }
         }
     }
@@ -49,14 +57,15 @@ public class BankTerminalScreen extends AbstractContainerScreen<BankTerminalMenu
         int x = (this.width - this.imageWidth) / 2; int y = (this.height - this.imageHeight) / 2;
         ItemStack hovered = ItemStack.EMPTY;
         if (tab == 0) {
-            g.drawString(this.font, "Cash (Pocket): " + String.format("%,d$", ClientFinanceData.getCash()), x + 16, y + 42, 0x55FF55);
-            g.drawString(this.font, "Bank Balance: " + String.format("%,d$", ClientFinanceData.getBankBalance()), x + 16, y + 60, 0x55FFFF);
-        } else {
+            g.drawString(this.font, "Cash (Pocket): " + String.format("%,d$", ClientFinanceData.getCash()), x + 16, y + 40, 0x55FF55);
+            g.drawString(this.font, "Bank Balance: " + String.format("%,d$", ClientFinanceData.getBankBalance()), x + 16, y + 58, 0x55FFFF);
+            g.drawString(this.font, "Weekly Deposit Interest: +2.0% (every 7 days)", x + 16, y + 76, 0xFFAA00);
+        } else if (tab == 1) {
             IndustryPatent[] list = {IndustryPatent.FOOD_PROCESSING, IndustryPatent.HEAVY_MATERIALS, IndustryPatent.PRECISION_TECH};
             for (int i = 0; i != 3; i++) {
                 IndustryPatent pat = list[i]; int rowY = y + 36 + i * 52;
                 g.drawString(this.font, pat.title, x + 12, rowY + 4, 0xFFFF55);
-                if (ClientFinanceData.hasPatent(pat.id)) g.drawString(this.font, "[UNLOCKED]", x + 195, rowY + 4, 0x55FF55);
+                if (ClientFinanceData.hasPatent(pat.id)) g.drawString(this.font, "[UNLOCKED]", x + 200, rowY + 4, 0x55FF55);
                 for (int k = 0; k != Math.min(11, pat.previewItems.size()); k++) {
                     Item it = ForgeRegistries.ITEMS.getValue(new ResourceLocation(pat.previewItems.get(k)));
                     if (it != null) {
@@ -65,6 +74,18 @@ public class BankTerminalScreen extends AbstractContainerScreen<BankTerminalMenu
                         if (mx >= ix && mx <= ix + 16 && my >= iy && my <= iy + 16) hovered = st;
                     }
                 }
+            }
+        } else {
+            CorporationTier cur = CorporationTier.byLevel(ClientFinanceData.getCorpLevel());
+            g.drawString(this.font, "Current Status: " + cur.title + " (Lvl " + (cur.level + 1) + "/5)", x + 16, y + 40, 0xFFFF55);
+            g.drawString(this.font, "Max Industrial Plots: " + cur.maxPlots, x + 16, y + 58, 0xFFFFFF);
+            g.drawString(this.font, "Sell Revenue Bonus: +" + (int)(cur.sellBonus * 100) + "%", x + 16, y + 76, 0x55FF55);
+            if (cur.level < 4) {
+                CorporationTier next = CorporationTier.byLevel(cur.level + 1);
+                g.drawString(this.font, "Next Tier: " + next.title, x + 16, y + 106, 0x55FFFF);
+                g.drawString(this.font, "Grants: " + next.maxPlots + " plots & +" + (int)(next.sellBonus * 100) + "% revenue", x + 16, y + 122, 0xAAAAAA);
+            } else {
+                g.drawString(this.font, "Maximum Monopolist Status Reached!", x + 16, y + 115, 0xFFD700);
             }
         }
         if (!hovered.isEmpty()) g.renderTooltip(this.font, hovered, mx, my); else this.renderTooltip(g, mx, my);

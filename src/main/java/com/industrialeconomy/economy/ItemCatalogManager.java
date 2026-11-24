@@ -20,13 +20,15 @@ public class ItemCatalogManager {
             if (!needWrite) {
                 try (FileReader r = new FileReader(file.toFile())) {
                     List<MarketItemEntry> old = GSON.fromJson(r, new TypeToken<List<MarketItemEntry>>(){}.getType());
-                    if (old == null || old.stream().noneMatch(e -> "minecraft:tinted_glass".equals(e.itemId))) needWrite = true;
+                    if (old == null || old.stream().noneMatch(e -> "create:metal_girder".equals(e.itemId))) needWrite = true;
                 }
             }
             if (needWrite) {
                 List<MarketItemEntry> def = new ArrayList<>();
                 ItemCatalogPart1.fill(def);
                 ItemCatalogPart2.fill(def);
+                String[] dyes = {"white_dye","red_dye","yellow_dye","blue_dye","green_dye","orange_dye","black_dye","gray_dye"};
+                for (String d : dyes) def.add(new MarketItemEntry("minecraft:" + d, MarketCategory.AGRICULTURE, 14, 6, 0.22, 0));
                 try (FileWriter w = new FileWriter(file.toFile())) { GSON.toJson(def, w); }
             }
             try (FileReader r = new FileReader(file.toFile())) {

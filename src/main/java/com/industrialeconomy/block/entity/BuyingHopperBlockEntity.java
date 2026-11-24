@@ -28,7 +28,7 @@ public class BuyingHopperBlockEntity extends BlockEntity {
         if (nearest == null || nearest.distanceToSqr(pos.getX(), pos.getY(), pos.getZ()) > 256) return;
         nearest.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
             EconomySavedData eco = EconomySavedData.get(sl);
-            long earned = 0L;
+            long baseSum = 0L;
             for (ItemEntity ie : list) {
                 ItemStack st = ie.getItem();
                 if (st.isEmpty() || st.isDamaged() || st.isEnchanted()) continue;
@@ -38,10 +38,13 @@ public class BuyingHopperBlockEntity extends BlockEntity {
                 if (entry == null || !f.hasPatent(entry.patentId)) continue;
                 boolean ok = entry.category.equals(cat.name()) || (cat == MarketCategory.RARE && entry.category.equals(MarketCategory.EQUIPMENT.name()) && entry.patentId > 0);
                 if (!ok) continue;
-                earned += eco.registerSaleAndGetPayout(id.toString(), st.getCount());
+                baseSum += eco.registerSaleAndGetPayout(id.toString(), st.getCount());
                 ie.discard();
             }
-            if (earned > 0) { f.addCash(earned); FinanceEvents.syncToClient(nearest, f); }
+            if (baseSum > 0) {
+                long earned = Math.round(baseSum * (1.0 + f.getCorpTier().sellBonus));
+                f.addCash(earned); FinanceEvents.syncToClient(nearest, f);
+            }
         });
     }
 }
