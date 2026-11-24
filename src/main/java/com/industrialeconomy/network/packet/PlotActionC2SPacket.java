@@ -17,25 +17,30 @@ public class PlotActionC2SPacket {
         sup.get().enqueueWork(() -> {
             ServerPlayer p = sup.get().getSender(); if (p == null) return;
             ServerLevel sl = p.serverLevel(); PlotSavedData data = PlotSavedData.get(sl);
-            IndustrialPlot plot = data.getPlotById(plotId); if (plot == null) return;
+            String clean = plotId.replace("Plot #", "").replace("#", "").trim();
+            IndustrialPlot plot = data.getPlotById(plotId);
+            if (plot == null) plot = data.getPlotById(clean);
+            if (plot == null) for (IndustrialPlot ip : data.getAll()) if (ip.id.equalsIgnoreCase(clean)) { plot = ip; break; }
+            if (plot == null) { p.sendSystemMessage(Component.literal("Plot not found: " + plotId).withStyle(ChatFormatting.RED)); return; }
+            final IndustrialPlot target = plot;
             p.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
-                if (isBuy && plot.ownerId == null) {
+                if (isBuy && target.ownerId == null) {
                     long owned = data.getAll().stream().filter(pl -> p.getUUID().equals(pl.ownerId)).count();
                     if (owned >= f.getCorpTier().maxPlots) {
                         p.sendSystemMessage(Component.literal("Plot limit reached (" + f.getCorpTier().maxPlots + ")! Upgrade Corporation at ATM.").withStyle(ChatFormatting.RED)); return;
                     }
-                    long cost = plot.tier.price;
+                    long cost = target.tier.price;
                     if (!f.spendBank(cost) && !f.spendCash(cost)) {
-                        p.sendSystemMessage(Component.literal("Not enough funds!").withStyle(ChatFormatting.RED)); return;
+                        p.sendSystemMessage(Component.literal("Not enough funds (" + String.format("%,d$", cost) + ")!").withStyle(ChatFormatting.RED)); return;
                     }
-                    plot.ownerId = p.getUUID(); plot.ownerName = p.getGameProfile().getName(); data.setDirty();
+                    target.ownerId = p.getUUID(); target.ownerName = p.getGameProfile().getName(); data.setDirty();
                     FinanceEvents.syncToClient(p, f);
-                    p.sendSystemMessage(Component.literal("Purchased Plot #" + plot.id + "!").withStyle(ChatFormatting.GREEN));
-                } else if (!isBuy && p.getUUID().equals(plot.ownerId)) {
-                    long refund = Math.round(plot.tier.price * 0.70);
-                    plot.ownerId = null; plot.ownerName = null; data.setDirty();
+                    p.sendSystemMessage(Component.literal("Purchased Plot #" + target.id + "!").withStyle(ChatFormatting.GREEN));
+                } else if (!isBuy && p.getUUID().equals(target.ownerId)) {
+                    long refund = Math.round(target.tier.price * 0.70);
+                    target.ownerId = null; target.ownerName = null; data.setDirty();
                     f.addBank(refund); FinanceEvents.syncToClient(p, f);
-                    p.sendSystemMessage(Component.literal("Sold Plot #" + plot.id + " for " + String.format("%,d$", refund)).withStyle(ChatFormatting.YELLOW));
+                    p.sendSystemMessage(Component.literal("Sold Plot #" + target.id + " for " + String.format("%,d$", refund)).withStyle(ChatFormatting.YELLOW));
                 }
             });
         });

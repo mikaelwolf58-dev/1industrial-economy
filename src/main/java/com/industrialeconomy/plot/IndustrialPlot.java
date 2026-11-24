@@ -12,6 +12,10 @@ public class IndustrialPlot {
     public boolean contains(BlockPos pos) {
         return pos.getX() >= minX && pos.getX() <= maxX && pos.getZ() >= minZ && pos.getZ() <= maxZ && pos.getY() >= baseY - 5 && pos.getY() <= baseY + 32;
     }
+    public long getWeeklyTax() {
+        if (ownerId == null || tier.price <= 20000L) return 0L;
+        return Math.round(tier.price * 0.02);
+    }
     public CompoundTag save() {
         CompoundTag t = new CompoundTag();
         t.putString("Id", id); t.putString("Tier", tier.name());
