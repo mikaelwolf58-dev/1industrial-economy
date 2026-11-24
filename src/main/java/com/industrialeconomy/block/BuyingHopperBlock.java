@@ -1,4 +1,5 @@
 package com.industrialeconomy.block;
+import com.industrialeconomy.block.entity.BuyingHopperBlockEntity;
 import com.industrialeconomy.economy.*;
 import com.industrialeconomy.event.FinanceEvents;
 import com.industrialeconomy.finance.PlayerFinanceProvider;
@@ -12,13 +13,21 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.registries.ForgeRegistries;
 import java.util.Comparator;
-public class BuyingHopperBlock extends Block {
+public class BuyingHopperBlock extends BaseEntityBlock {
     public final MarketCategory category;
     public BuyingHopperBlock(Properties props, MarketCategory category) { super(props); this.category = category; }
+    public MarketCategory getCategory() { return category; }
+    @Override public RenderShape getRenderShape(BlockState s) { return RenderShape.MODEL; }
+    @Override public BlockEntity newBlockEntity(BlockPos p, BlockState s) { return new BuyingHopperBlockEntity(p, s); }
+    @Override public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level l, BlockState s, BlockEntityType<T> t) {
+        if (l.isClientSide) return null;
+        return (lvl, pos, st, be) -> { if (be instanceof BuyingHopperBlockEntity b) BuyingHopperBlockEntity.tick(lvl, pos, st, b); };
+    }
     @Override public void stepOn(Level level, BlockPos pos, BlockState state, Entity entity) {
         if (!level.isClientSide && entity instanceof ItemEntity itemEntity && level instanceof ServerLevel sl) {
             ItemStack stack = itemEntity.getItem();
@@ -36,12 +45,9 @@ public class BuyingHopperBlock extends Block {
                     if (sl.getGameTime() % 40 == 0) nearest.displayClientMessage(Component.literal("Requires Patent: " + IndustryPatent.byId(entry.patentId).title + " (Buy at ATM)").withStyle(ChatFormatting.RED), true);
                     return;
                 }
-                EconomySavedData eco = EconomySavedData.get(sl);
-                int count = stack.getCount();
-                long totalEarned = eco.registerSaleAndGetPayout(id.toString(), count);
-                f.addCash(totalEarned);
-                FinanceEvents.syncToClient(nearest, f);
-                nearest.displayClientMessage(Component.literal("Sold x" + count + " -> +" + String.format("%,d$", totalEarned)).withStyle(ChatFormatting.GREEN), true);
+                long totalEarned = EconomySavedData.get(sl).sellItem(id.toString(), stack.getCount());
+                f.addCash(totalEarned); FinanceEvents.syncToClient(nearest, f);
+                nearest.displayClientMessage(Component.literal("Sold x" + stack.getCount() + " -> +" + String.format("%,d$", totalEarned)).withStyle(ChatFormatting.GREEN), true);
                 itemEntity.discard();
             });
         }

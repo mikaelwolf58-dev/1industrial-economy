@@ -17,33 +17,9 @@ public class PlayerFinanceData {
     public boolean hasPatent(int id) { return id <= 0 || patents.contains(id); }
     public void unlockPatent(int id) { if (id > 0) patents.add(id); }
     public Set<Integer> getPatents() { return patents; }
-    public int getPatentMask() { int m = 0; for (int id : patents) m |= (1  BlockEntityTicker<T> getTicker(Level l, BlockState s, BlockEntityType<T> t) { return l.isClientSide ? null : (lvl, pos, st, be) -> { if (be instanceof BuyingHopperBlockEntity b) BuyingHopperBlockEntity.tick(lvl, pos, st, b); }; }
-    @Override public void stepOn(Level level, BlockPos pos, BlockState state, Entity entity) {
-        if (!level.isClientSide && entity instanceof ItemEntity itemEntity && level instanceof ServerLevel sl) {
-            ItemStack stack = itemEntity.getItem();
-            if (stack.isEmpty() || stack.isDamaged() || stack.isEnchanted()) return;
-            ResourceLocation id = ForgeRegistries.ITEMS.getKey(stack.getItem());
-            if (id == null) return;
-            MarketItemEntry entry = ItemCatalogManager.getItem(id.toString());
-            if (entry == null) return;
-            boolean ok = entry.category.equals(category.name()) || (category == MarketCategory.RARE && entry.category.equals(MarketCategory.EQUIPMENT.name()) && entry.patentId > 0);
-            if (!ok) return;
-            ServerPlayer nearest = sl.players().stream().min(Comparator.comparingDouble(p -> p.distanceToSqr(pos.getX(), pos.getY(), pos.getZ()))).orElse(null);
-            if (nearest == null || nearest.distanceToSqr(pos.getX(), pos.getY(), pos.getZ()) > 256) return;
-            nearest.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
-                if (!f.hasPatent(entry.patentId)) {
-                    if (sl.getGameTime() % 40 == 0) nearest.displayClientMessage(Component.literal("Requires Patent: " + IndustryPatent.byId(entry.patentId).title + " (Buy at ATM)").withStyle(ChatFormatting.RED), true);
-                    return;
-                }
-                EconomySavedData eco = EconomySavedData.get(sl);
-                int count = stack.getCount();
-                long totalEarned = eco.sellItem(id.toString(), count);
-                f.addCash(totalEarned);
-                FinanceEvents.syncToClient(nearest, f);
-                nearest.displayClientMessage(Component.literal("Sold x" + count + " -> +" + String.format("%,d$", totalEarned)).withStyle(ChatFormatting.GREEN), true);
-                itemEntity.discard();
-            });
-        }
-        super.stepOn(level, pos, state, entity);
-    }
+    public int getPatentMask() { int m = 0; if (patents.contains(1)) m += 2; if (patents.contains(2)) m += 4; if (patents.contains(3)) m += 8; return m; }
+    public void setPatentMask(int mask) { patents.clear(); if ((mask & 2) != 0) patents.add(1); if ((mask & 4) != 0) patents.add(2); if ((mask & 8) != 0) patents.add(3); }
+    public void copyFrom(PlayerFinanceData o) { this.cash = o.cash; this.bankBalance = o.bankBalance; this.patents.clear(); this.patents.addAll(o.patents); }
+    public void saveNBTData(CompoundTag t) { t.putLong("Cash", cash); t.putLong("Bank", bankBalance); t.putInt("Patents", getPatentMask()); }
+    public void loadNBTData(CompoundTag t) { cash = t.getLong("Cash"); bankBalance = t.getLong("Bank"); setPatentMask(t.getInt("Patents")); }
 }
