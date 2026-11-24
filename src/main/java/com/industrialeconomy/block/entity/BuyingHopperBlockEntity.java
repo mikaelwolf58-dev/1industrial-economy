@@ -4,9 +4,8 @@ import com.industrialeconomy.economy.*;
 import com.industrialeconomy.event.FinanceEvents;
 import com.industrialeconomy.finance.PlayerFinanceProvider;
 import com.industrialeconomy.registry.ModBlockEntities;
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -16,39 +15,33 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.registries.ForgeRegistries;
-import java.util.List;
+import java.util.*;
 public class BuyingHopperBlockEntity extends BlockEntity {
-    public BuyingHopperBlockEntity(BlockPos pos, BlockState state) { super(ModBlockEntities.BUYING_HOPPER_BE.get(), pos, state); }
+    public BuyingHopperBlockEntity(BlockPos p, BlockState s) { super(ModBlockEntities.BUYING_HOPPER.get(), p, s); }
     public static void tick(Level level, BlockPos pos, BlockState state, BuyingHopperBlockEntity be) {
-        if (!(level instanceof ServerLevel sl) || sl.getGameTime() % 10 != 0) return;
-        if (!(state.getBlock() instanceof BuyingHopperBlock hopperBlock)) return;
-        MarketCategory cat = hopperBlock.getCategory();
-        AABB box = new AABB(pos.getX(), pos.getY() + 0.5, pos.getZ(), pos.getX() + 1.0, pos.getY() + 2.0, pos.getZ() + 1.0);
-        List<ItemEntity> items = sl.getEntitiesOfClass(ItemEntity.class, box);
-        if (items.isEmpty()) return;
-        ServerPlayer nearest = (ServerPlayer) sl.getNearestPlayer(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 24.0, false);
-        if (nearest == null) return;
-        EconomySavedData eco = EconomySavedData.get(sl);
-        long totalEarned = 0L;
-        for (ItemEntity entity : items) {
-            if (!entity.isAlive()) continue;
-            ItemStack stack = entity.getItem();
-            String id = ForgeRegistries.ITEMS.getKey(stack.getItem()).toString();
-            MarketItemEntry entry = ItemCatalogManager.getItem(id);
-            if (entry != null && entry.category.equals(cat.name())) {
-                int count = stack.getCount();
-                totalEarned += eco.getDynamicSellPrice(id) * count;
-                eco.recordItemSold(id, count);
-                entity.discard();
+        if (level.isClientSide || !(level instanceof ServerLevel sl) || sl.getGameTime() % 10 != 0) return;
+        if (!(state.getBlock() instanceof BuyingHopperBlock hb)) return;
+        MarketCategory cat = hb.getCategory();
+        List<ItemEntity> list = sl.getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(0.2, 0.8, 0.2));
+        if (list.isEmpty()) return;
+        ServerPlayer nearest = sl.players().stream().min(Comparator.comparingDouble(p -> p.distanceToSqr(pos.getX(), pos.getY(), pos.getZ()))).orElse(null);
+        if (nearest == null || nearest.distanceToSqr(pos.getX(), pos.getY(), pos.getZ()) > 256) return;
+        nearest.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
+            EconomySavedData eco = EconomySavedData.get(sl);
+            long earned = 0L;
+            for (ItemEntity ie : list) {
+                ItemStack st = ie.getItem();
+                if (st.isEmpty() || st.isDamaged() || st.isEnchanted()) continue;
+                ResourceLocation id = ForgeRegistries.ITEMS.getKey(st.getItem());
+                if (id == null) continue;
+                MarketItemEntry entry = ItemCatalogManager.getItem(id.toString());
+                if (entry == null || !f.hasPatent(entry.patentId)) continue;
+                boolean ok = entry.category.equals(cat.name()) || (cat == MarketCategory.RARE && entry.category.equals(MarketCategory.EQUIPMENT.name()) && entry.patentId > 0);
+                if (!ok) continue;
+                earned += eco.sellItem(id.toString(), st.getCount());
+                ie.discard();
             }
-        }
-        if (totalEarned > 0) {
-            final long reward = totalEarned;
-            nearest.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
-                f.addCash(reward);
-                FinanceEvents.syncToClient(nearest, f);
-                nearest.displayClientMessage(Component.literal("Sold cargo: +" + String.format("%,d$", reward)).withStyle(ChatFormatting.GREEN), true);
-            });
-        }
+            if (earned > 0) { f.addCash(earned); FinanceEvents.syncToClient(nearest, f); }
+        });
     }
 }
