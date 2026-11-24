@@ -13,6 +13,13 @@ public class StructureBuilderHelper {
         if (!st.getFluidState().isEmpty() || st.is(Blocks.ICE) || st.is(Blocks.PACKED_ICE)) return -1;
         return y;
     }
+    public static void terraformArea(ServerLevel l, BlockPos o, int w, int d, int h, Block fill) {
+        for (int dx = 0; dx < w; dx++) for (int dz = 0; dz < d; dz++) {
+            for (int dy = 1; dy <= h; dy++) l.setBlock(o.offset(dx, dy, dz), Blocks.AIR.defaultBlockState(), 3);
+            for (int dy = -3; dy < 0; dy++) l.setBlock(o.offset(dx, dy, dz), fill.defaultBlockState(), 3);
+            l.setBlock(o.offset(dx, 0, dz), Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+        }
+    }
     public static void clearAndPave(ServerLevel l, BlockPos o, int w, int d, BlockState floor) {
         for (int dx = 0; dx < w; dx++) for (int dz = 0; dz < d; dz++) {
             for (int dy = 1; dy <= 8; dy++) l.setBlock(o.offset(dx, dy, dz), Blocks.AIR.defaultBlockState(), 3);
@@ -31,7 +38,7 @@ public class StructureBuilderHelper {
         }
         l.setBlock(o.offset(5, 1, 4), shop.defaultBlockState(), 3);
         l.setBlock(o.offset(8, 1, 4), hopper.defaultBlockState(), 3);
-        l.setBlock(o.offset(3, 1, 7), ModBlocks.BANK_TERMINAL.get().defaultBlockState(), 3);
+        l.setBlock(o.offset(3, 1, 7), ModBlocks.BANK_TERMINAL_BLOCK.get().defaultBlockState(), 3);
         l.setBlock(o.offset(6, 3, 7), Blocks.LANTERN.defaultBlockState(), 3);
     }
 }
