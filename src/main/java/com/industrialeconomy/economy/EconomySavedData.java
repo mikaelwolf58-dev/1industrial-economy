@@ -2,44 +2,66 @@ package com.industrialeconomy.economy;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 public class EconomySavedData extends SavedData {
-    private final Map<String, Double> supplyPressure = new HashMap<>();
+    private final Map<String, Integer> stockOffset = new HashMap<>();
     public static EconomySavedData get(ServerLevel level) {
-        return level.getServer().overworld().getDataStorage().computeIfAbsent(EconomySavedData::load, EconomySavedData::new, "industrial_economy_market");
+        return level.getDataStorage().computeIfAbsent(EconomySavedData::load, EconomySavedData::new, "industrial_economy_market");
     }
     public static EconomySavedData load(CompoundTag tag) {
         EconomySavedData data = new EconomySavedData();
-        CompoundTag mapTag = tag.getCompound("Supply");
-        for (String key : mapTag.getAllKeys()) data.supplyPressure.put(key, mapTag.getDouble(key));
+        CompoundTag offsets = tag.getCompound("Offsets");
+        for (String key : offsets.getAllKeys()) data.stockOffset.put(key, offsets.getInt(key));
         return data;
     }
     @Override public CompoundTag save(CompoundTag tag) {
-        CompoundTag mapTag = new CompoundTag();
-        supplyPressure.forEach(mapTag::putDouble);
-        tag.put("Supply", mapTag);
+        CompoundTag offsets = new CompoundTag();
+        stockOffset.forEach(offsets::putInt);
+        tag.put("Offsets", offsets);
         return tag;
-    }
-    public void recordItemSold(String itemId, int count) {
-        double cur = supplyPressure.getOrDefault(itemId, 0.0);
-        supplyPressure.put(itemId, Math.min(0.60, cur + (count * 0.0005)));
-        setDirty();
-    }
-    public void tickMarketRecovery() {
-        supplyPressure.replaceAll((k, v) -> Math.max(-0.40, v - 0.01));
-        setDirty();
-    }
-    public long getDynamicSellPrice(String itemId) {
-        MarketItemEntry e = ItemCatalogManager.getItem(itemId);
-        if (e == null) return 0L;
-        double p = supplyPressure.getOrDefault(itemId, 0.0);
-        return Math.max(1L, Math.round(e.baseSellPrice * (1.0 - p)));
     }
     public long getDynamicBuyPrice(String itemId) {
         MarketItemEntry e = ItemCatalogManager.getItem(itemId);
         if (e == null) return 0L;
-        double p = supplyPressure.getOrDefault(itemId, 0.0);
-        return Math.max(2L, Math.round(e.baseBuyPrice * (1.0 - (p * 0.5))));
+        int off = stockOffset.getOrDefault(itemId, 0);
+        double mult = Math.max(0.4, Math.min(2.5, 1.0 + (off / 64.0) * e.volatility));
+        return Math.max(1L, Math.round(e.baseBuyPrice * mult));
+    }
+    public long getDynamicSellPrice(String itemId) {
+        MarketItemEntry e = ItemCatalogManager.getItem(itemId);
+        if (e == null) return 0L;
+        int off = stockOffset.getOrDefault(itemId, 0);
+        double mult = Math.max(0.4, Math.min(2.5, 1.0 + (off / 64.0) * e.volatility));
+        return Math.max(1L, Math.round(e.baseSellPrice * mult));
+    }
+    public long registerSaleAndGetPayout(String itemId, int count) {
+        long total = 0L;
+        for (int i = 0; i < count; i++) {
+            total += getDynamicSellPrice(itemId);
+            stockOffset.put(itemId, stockOffset.getOrDefault(itemId, 0) - 1);
+        }
+        setDirty();
+        return total;
+    }
+    public long registerPurchaseAndGetCost(String itemId, int count) {
+        long total = 0L;
+        for (int i = 0; i < count; i++) {
+            total += getDynamicBuyPrice(itemId);
+            stockOffset.put(itemId, stockOffset.getOrDefault(itemId, 0) + 1);
+        }
+        setDirty();
+        return total;
+    }
+    public void tickMarketRecovery() {
+        if (stockOffset.isEmpty()) return;
+        Iterator<Map.Entry<String, Integer>> it = stockOffset.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<String, Integer> entry = it.next();
+            int v = entry.getValue();
+            if (v > 0) entry.setValue(Math.max(0, v - 8));
+            else if (v < 0) entry.setValue(Math.min(0, v + 8));
+            if (entry.getValue() == 0) it.remove();
+        }
+        setDirty();
     }
 }
