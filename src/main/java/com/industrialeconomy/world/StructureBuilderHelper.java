@@ -38,7 +38,7 @@ public class StructureBuilderHelper {
         }
         l.setBlock(o.offset(5, 1, 4), shop.defaultBlockState(), 3);
         l.setBlock(o.offset(8, 1, 4), hopper.defaultBlockState(), 3);
-        l.setBlock(o.offset(3, 1, 7), ModBlocks.BANK_TERMINAL_BLOCK.get().defaultBlockState(), 3);
+        l.setBlock(o.offset(3, 1, 7), ModBlocks.ATM_TERMINAL.get().defaultBlockState(), 3);
         l.setBlock(o.offset(6, 3, 7), Blocks.LANTERN.defaultBlockState(), 3);
     }
 }
