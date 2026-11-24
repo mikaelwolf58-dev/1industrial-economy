@@ -1,5 +1,6 @@
 package com.industrialeconomy.event;
 import com.industrialeconomy.IndustrialEconomy;
+import com.industrialeconomy.client.ClientFinanceData;
 import com.industrialeconomy.command.*;
 import com.industrialeconomy.economy.*;
 import com.industrialeconomy.finance.*;
@@ -7,7 +8,7 @@ import com.industrialeconomy.network.ModMessages;
 import com.industrialeconomy.network.packet.SyncFinanceS2CPacket;
 import com.industrialeconomy.plot.InspectionManager;
 import com.industrialeconomy.registry.ModItems;
-import com.industrialeconomy.world.WorldInfrastructureGenerator;
+import com.industrialeconomy.world.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -23,6 +24,7 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import java.util.*;
 @Mod.EventBusSubscriber(modid = IndustrialEconomy.MODID)
 public class FinanceEvents {
     @SubscribeEvent public static void onServerStarted(ServerStartedEvent e) { RecipeBlocker.filterCraftingRecipes(e.getServer()); }
@@ -63,5 +65,13 @@ public class FinanceEvents {
     }
     @SubscribeEvent public static void onRespawn(PlayerEvent.PlayerRespawnEvent event) { if (event.getEntity() instanceof ServerPlayer p) p.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> syncToClient(p, f)); }
     @SubscribeEvent public static void onRegCap(RegisterCapabilitiesEvent event) { event.register(PlayerFinanceData.class); }
-    public static void syncToClient(ServerPlayer player, PlayerFinanceData f) { ModMessages.sendToPlayer(new SyncFinanceS2CPacket(f.getCash(), f.getBankBalance()), player); }
+    public static void syncToClient(ServerPlayer player, PlayerFinanceData f) {
+        ServerLevel sl = player.serverLevel();
+        EconomySavedData eco = EconomySavedData.get(sl);
+        Map<String, ClientFinanceData.PricePair> prices = new HashMap<>();
+        for (MarketItemEntry e : ItemCatalogManager.getAll()) prices.put(e.itemId, new ClientFinanceData.PricePair(eco.getDynamicBuyPrice(e.itemId), eco.getDynamicSellPrice(e.itemId)));
+        List<ClientFinanceData.HubLine> hubs = new ArrayList<>();
+        for (var h : WorldHubSavedData.get(sl).getHubs()) hubs.add(new ClientFinanceData.HubLine(h.type(), h.x(), h.y(), h.z()));
+        ModMessages.sendToPlayer(new SyncFinanceS2CPacket(f.getCash(), f.getBankBalance(), f.getPatentMask(), prices, hubs), player);
+    }
 }

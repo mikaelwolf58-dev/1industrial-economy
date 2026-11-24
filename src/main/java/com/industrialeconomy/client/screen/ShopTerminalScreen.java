@@ -11,8 +11,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.*;
 import net.minecraftforge.registries.ForgeRegistries;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -68,9 +67,7 @@ public class ShopTerminalScreen extends AbstractContainerScreen<ShopTerminalMenu
         this.renderBackground(g); super.render(g, mx, my, pt);
         int x = (this.width - this.imageWidth) / 2; int y = (this.height - this.imageHeight) / 2;
         g.drawString(this.font, "SHOP: " + menu.category.name() + " | Cash: " + String.format("%,d$", ClientFinanceData.getCash()), x + 12, y + 10, menu.category == MarketCategory.BOUTIQUE ? 0xFFFF55 : 0x55FFFF);
-        if (menu.category == MarketCategory.BOUTIQUE) {
-            g.drawString(this.font, "Days until next batch: " + daysLeft, x + 12, y + 24, 0xFFAA00);
-        }
+        if (menu.category == MarketCategory.BOUTIQUE) g.drawString(this.font, "Days until next batch: " + daysLeft, x + 12, y + 24, 0xFFAA00);
         int start = page * 5; ItemStack hovered = ItemStack.EMPTY;
         if (menu.category == MarketCategory.BOUTIQUE) {
             for (int i = 0; i != 5 && (start + i) != boutique.size(); i++) {
@@ -87,9 +84,10 @@ public class ShopTerminalScreen extends AbstractContainerScreen<ShopTerminalMenu
                     ItemStack st = new ItemStack(item); g.renderItem(st, x + 12, rowY + 1);
                     if (mx >= x + 10 && mx <= x + 174 && my >= rowY && my <= rowY + 20) hovered = st;
                 }
+                long liveBuy = ClientFinanceData.getBuy(entry.itemId, entry.baseBuyPrice);
                 String shortName = entry.itemId.substring(entry.itemId.indexOf(":") + 1);
                 if (shortName.length() > 16) shortName = shortName.substring(0, 16);
-                g.drawString(this.font, shortName + " (" + entry.baseBuyPrice + "$)", x + 32, rowY + 5, 0xFFFFFF);
+                g.drawString(this.font, shortName + " (" + liveBuy + "$)", x + 32, rowY + 5, 0xFFFFFF);
             }
         }
         g.drawString(this.font, "Page " + (page + 1) + "/" + (maxPage() + 1), x + 115, y + 181, 0xAAAAAA);
