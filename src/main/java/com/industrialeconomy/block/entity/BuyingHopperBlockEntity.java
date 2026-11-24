@@ -17,7 +17,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraftforge.registries.ForgeRegistries;
 import java.util.*;
 public class BuyingHopperBlockEntity extends BlockEntity {
-    public BuyingHopperBlockEntity(BlockPos p, BlockState s) { super(ModBlockEntities.BUYING_HOPPER.get(), p, s); }
+    public BuyingHopperBlockEntity(BlockPos p, BlockState s) { super(ModBlockEntities.BUYING_HOPPER_BE.get(), p, s); }
     public static void tick(Level level, BlockPos pos, BlockState state, BuyingHopperBlockEntity be) {
         if (level.isClientSide || !(level instanceof ServerLevel sl) || sl.getGameTime() % 10 != 0) return;
         if (!(state.getBlock() instanceof BuyingHopperBlock hb)) return;
@@ -38,7 +38,7 @@ public class BuyingHopperBlockEntity extends BlockEntity {
                 if (entry == null || !f.hasPatent(entry.patentId)) continue;
                 boolean ok = entry.category.equals(cat.name()) || (cat == MarketCategory.RARE && entry.category.equals(MarketCategory.EQUIPMENT.name()) && entry.patentId > 0);
                 if (!ok) continue;
-                earned += eco.sellItem(id.toString(), st.getCount());
+                earned += eco.registerSaleAndGetPayout(id.toString(), st.getCount());
                 ie.discard();
             }
             if (earned > 0) { f.addCash(earned); FinanceEvents.syncToClient(nearest, f); }
