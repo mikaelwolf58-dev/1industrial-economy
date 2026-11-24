@@ -17,22 +17,23 @@ public class PlotActionC2SPacket {
         sup.get().enqueueWork(() -> {
             ServerPlayer p = sup.get().getSender(); if (p == null) return;
             ServerLevel sl = p.serverLevel(); PlotSavedData data = PlotSavedData.get(sl);
-            IndustrialPlot plot = data.getById(plotId); if (plot == null) return;
+            IndustrialPlot plot = data.getPlotById(plotId); if (plot == null) return;
             p.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
-                if (isBuy && plot.ownerUUID == null) {
-                    long owned = data.getAll().stream().filter(pl -> p.getUUID().equals(pl.ownerUUID)).count();
+                if (isBuy && plot.ownerId == null) {
+                    long owned = data.getAll().stream().filter(pl -> p.getUUID().equals(pl.ownerId)).count();
                     if (owned >= f.getCorpTier().maxPlots) {
                         p.sendSystemMessage(Component.literal("Plot limit reached (" + f.getCorpTier().maxPlots + ")! Upgrade Corporation at ATM.").withStyle(ChatFormatting.RED)); return;
                     }
-                    if (!f.spendBank(plot.price) && !f.spendCash(plot.price)) {
+                    long cost = plot.tier.price;
+                    if (!f.spendBank(cost) && !f.spendCash(cost)) {
                         p.sendSystemMessage(Component.literal("Not enough funds!").withStyle(ChatFormatting.RED)); return;
                     }
-                    plot.ownerUUID = p.getUUID(); plot.ownerName = p.getGameProfile().getName(); data.setDirty();
+                    plot.ownerId = p.getUUID(); plot.ownerName = p.getGameProfile().getName(); data.setDirty();
                     FinanceEvents.syncToClient(p, f);
                     p.sendSystemMessage(Component.literal("Purchased Plot #" + plot.id + "!").withStyle(ChatFormatting.GREEN));
-                } else if (!isBuy && p.getUUID().equals(plot.ownerUUID)) {
-                    long refund = Math.round(plot.price * 0.70);
-                    plot.ownerUUID = null; plot.ownerName = null; data.setDirty();
+                } else if (!isBuy && p.getUUID().equals(plot.ownerId)) {
+                    long refund = Math.round(plot.tier.price * 0.70);
+                    plot.ownerId = null; plot.ownerName = null; data.setDirty();
                     f.addBank(refund); FinanceEvents.syncToClient(p, f);
                     p.sendSystemMessage(Component.literal("Sold Plot #" + plot.id + " for " + String.format("%,d$", refund)).withStyle(ChatFormatting.YELLOW));
                 }
