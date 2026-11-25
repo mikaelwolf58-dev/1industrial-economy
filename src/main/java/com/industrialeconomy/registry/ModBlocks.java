@@ -19,6 +19,7 @@ public class ModBlocks {
     public static final RegistryObject<Block> HOPPER_WOOD = registerBlock("hopper_wood", () -> new BuyingHopperBlock(metal(), MarketCategory.WOOD));
     public static final RegistryObject<Block> HOPPER_AGRICULTURE = registerBlock("hopper_agriculture", () -> new BuyingHopperBlock(metal(), MarketCategory.AGRICULTURE));
     public static final RegistryObject<Block> HOPPER_FOOD = registerBlock("hopper_food", () -> new BuyingHopperBlock(metal(), MarketCategory.FOOD));
+    public static final RegistryObject<Block> HOPPER_EQUIPMENT = registerBlock("hopper_equipment", () -> new BuyingHopperBlock(metal(), MarketCategory.EQUIPMENT));
     public static final RegistryObject<Block> HOPPER_RARE = registerBlock("hopper_rare", () -> new BuyingHopperBlock(metal(), MarketCategory.RARE));
     public static final RegistryObject<Block> SHOP_EQUIPMENT = registerBlock("shop_equipment", () -> new ShopTerminalBlock(metal(), MarketCategory.EQUIPMENT));
     public static final RegistryObject<Block> SHOP_FUEL = registerBlock("shop_fuel", () -> new ShopTerminalBlock(metal(), MarketCategory.FUEL));
