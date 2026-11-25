@@ -1,6 +1,7 @@
 package com.industrialeconomy.economy;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.enchantment.Enchantments;
 import java.util.*;
@@ -43,5 +44,16 @@ public class BoutiqueRotationManager {
         List<OverlimitLot> res = new ArrayList<>(3);
         for (int i = 0; i < 3; i++) res.add(POOL.get((start + i) % POOL.size()));
         return res;
+    }
+    public static void applyStandardBoutiqueEnchants(ItemStack st) {
+        if (st.getItem() instanceof ArmorItem ar) {
+            st.enchant(Enchantments.ALL_DAMAGE_PROTECTION, 4); st.enchant(Enchantments.THORNS, 3); st.enchant(Enchantments.UNBREAKING, 3); st.enchant(Enchantments.MENDING, 1);
+            if (ar.getEquipmentSlot() == EquipmentSlot.HEAD) { st.enchant(Enchantments.RESPIRATION, 3); st.enchant(Enchantments.AQUA_AFFINITY, 1); }
+            if (ar.getEquipmentSlot() == EquipmentSlot.FEET) { st.enchant(Enchantments.FALL_PROTECTION, 4); st.enchant(Enchantments.DEPTH_STRIDER, 3); }
+        } else if (st.getItem() instanceof SwordItem) { st.enchant(Enchantments.SHARPNESS, 5); st.enchant(Enchantments.MOB_LOOTING, 3); st.enchant(Enchantments.FIRE_ASPECT, 2); st.enchant(Enchantments.UNBREAKING, 3); st.enchant(Enchantments.MENDING, 1); }
+        else if (st.getItem() instanceof PickaxeItem || st.getItem() instanceof AxeItem || st.getItem() instanceof ShovelItem) { st.enchant(Enchantments.BLOCK_EFFICIENCY, 5); st.enchant(Enchantments.BLOCK_FORTUNE, 3); st.enchant(Enchantments.UNBREAKING, 3); st.enchant(Enchantments.MENDING, 1); }
+        else if (st.getItem() instanceof BowItem) { st.enchant(Enchantments.POWER_ARROWS, 5); st.enchant(Enchantments.FLAMING_ARROWS, 1); st.enchant(Enchantments.INFINITY_ARROWS, 1); st.enchant(Enchantments.UNBREAKING, 3); }
+        else if (st.getItem() instanceof TridentItem) { st.enchant(Enchantments.IMPALING, 5); st.enchant(Enchantments.LOYALTY, 3); st.enchant(Enchantments.CHANNELING, 1); st.enchant(Enchantments.UNBREAKING, 3); st.enchant(Enchantments.MENDING, 1); }
+        else if (st.getItem() instanceof ElytraItem) { st.enchant(Enchantments.UNBREAKING, 3); st.enchant(Enchantments.MENDING, 1); }
     }
 }

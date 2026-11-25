@@ -36,8 +36,11 @@ public class ShopTerminalScreen extends AbstractContainerScreen<ShopTerminalMenu
         int pp = perPage(); int start = page * pp;
         for (int i = 0; i < pp && start + i < items.size(); i++) {
             MarketItemEntry e = items.get(start + i); int ry = startY + i * 22;
-            this.addRenderableWidget(Button.builder(Component.literal("+1"), b -> ModMessages.sendToServer(new BuyItemC2SPacket(e.itemId, 1))).bounds(x + 224, ry, 30, 18).build());
-            if (!isBoutique()) this.addRenderableWidget(Button.builder(Component.literal("+64"), b -> ModMessages.sendToServer(new BuyItemC2SPacket(e.itemId, 64))).bounds(x + 256, ry, 34, 18).build());
+            if (isBoutique()) this.addRenderableWidget(Button.builder(Component.literal("Buy"), b -> ModMessages.sendToServer(new BuyItemC2SPacket(e.itemId, 1))).bounds(x + 246, ry, 42, 18).build());
+            else {
+                this.addRenderableWidget(Button.builder(Component.literal("+1"), b -> ModMessages.sendToServer(new BuyItemC2SPacket(e.itemId, 1))).bounds(x + 224, ry, 30, 18).build());
+                this.addRenderableWidget(Button.builder(Component.literal("+64"), b -> ModMessages.sendToServer(new BuyItemC2SPacket(e.itemId, 64))).bounds(x + 256, ry, 34, 18).build());
+            }
         }
         if (page > 0) this.addRenderableWidget(Button.builder(Component.literal("<"), b -> { page--; rebuildButtons(); }).bounds(x + 12, y + 204, 24, 18).build());
         if ((page + 1) * pp < items.size()) this.addRenderableWidget(Button.builder(Component.literal(">"), b -> { page++; rebuildButtons(); }).bounds(x + 264, y + 204, 24, 18).build());
@@ -62,7 +65,7 @@ public class ShopTerminalScreen extends AbstractContainerScreen<ShopTerminalMenu
         for (int i = 0; i < pp && start + i < items.size(); i++) {
             MarketItemEntry e = items.get(start + i); int ry = startY + i * 22;
             Item it = ForgeRegistries.ITEMS.getValue(new ResourceLocation(e.itemId));
-            if (it != null) { ItemStack st = new ItemStack(it); g.renderItem(st, x + 12, ry + 1); if (mx >= x + 12 && mx <= x + 28 && my >= ry + 1 && my <= ry + 17) hov = st; g.drawString(this.font, st.getHoverName().getString(), x + 32, ry + 5, 0xFFFFFF); }
+            if (it != null) { ItemStack st = new ItemStack(it); if (isBoutique()) BoutiqueRotationManager.applyStandardBoutiqueEnchants(st); g.renderItem(st, x + 12, ry + 1); if (mx >= x + 12 && mx <= x + 28 && my >= ry + 1 && my <= ry + 17) hov = st; g.drawString(this.font, st.getHoverName().getString(), x + 32, ry + 5, 0xFFFFFF); }
             long price = ClientFinanceData.getBuy(e.itemId, e.baseBuyPrice); g.drawString(this.font, String.format("%,d$", price), x + 165, ry + 5, 0xFFFF55);
         }
         if (!hov.isEmpty()) g.renderTooltip(this.font, hov, mx, my); else this.renderTooltip(g, mx, my);
