@@ -30,7 +30,11 @@ public class CommercialPoint {
     }
     public long getUpgradeCost() { return level == 1 ? basePrice : (level == 2 ? basePrice * 2L : 0L); }
     public double getSellCashback() { return ownerId == null ? 0.0 : (level == 1 ? 0.15 : (level == 2 ? 0.25 : 0.40)); }
-    public long getDailyPassiveIncome() { return ownerId == null ? 0L : Math.round(basePrice * 0.025 * level); }
+    public long getWeeklyPassiveIncome() {
+        if (ownerId == null) return 0L;
+        double mult = level == 1 ? 1.0 : (level == 2 ? 1.8 : 3.24);
+        return Math.round(basePrice * 0.07 * mult);
+    }
     public long getTotalInvested() { return basePrice + (level >= 2 ? basePrice : 0L) + (level >= 3 ? basePrice * 2L : 0L); }
     public CompoundTag save() {
         CompoundTag t = new CompoundTag();

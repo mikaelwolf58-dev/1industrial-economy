@@ -11,12 +11,19 @@ import java.util.*;
 public class TaxBailiffManager {
     public static void assessWeeklyTaxes(ServerLevel sl) {
         PlotSavedData data = PlotSavedData.get(sl);
+        CommercialSavedData cData = CommercialSavedData.get(sl);
         for (ServerPlayer sp : sl.players()) {
             long tax = 0L;
             for (IndustrialPlot p : data.getAll()) if (sp.getUUID().equals(p.ownerId)) tax += p.getWeeklyTax();
-            if (tax <= 0L) continue;
-            final long totalTax = tax;
+            long retail = 0L;
+            for (CommercialPoint cp : cData.getAll()) if (sp.getUUID().equals(cp.ownerId)) retail += cp.getWeeklyPassiveIncome();
+            final long totalTax = tax; final long totalRetail = retail;
             sp.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
+                if (totalRetail > 0L) {
+                    f.addBank(totalRetail); FinanceEvents.syncToClient(sp, f);
+                    sp.sendSystemMessage(Component.literal("Commercial Points Weekly Income: +" + String.format("%,d$", totalRetail)).withStyle(ChatFormatting.AQUA));
+                }
+                if (totalTax <= 0L) return;
                 if (f.getDebtStage() == 0 && f.getBankBalance() >= totalTax) {
                     f.spendBank(totalTax); FinanceEvents.syncToClient(sp, f);
                     sp.sendSystemMessage(Component.literal("Weekly Property Tax paid: -" + String.format("%,d$", totalTax)).withStyle(ChatFormatting.YELLOW));
@@ -31,15 +38,8 @@ public class TaxBailiffManager {
     }
     public static void tickDaily(ServerLevel sl) {
         PlotSavedData data = PlotSavedData.get(sl);
-        CommercialSavedData cData = CommercialSavedData.get(sl);
         for (ServerPlayer sp : sl.players()) {
             sp.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
-                long retail = 0L;
-                for (CommercialPoint cp : cData.getAll()) if (sp.getUUID().equals(cp.ownerId)) retail += cp.getDailyPassiveIncome();
-                if (retail > 0L) {
-                    f.addBank(retail); FinanceEvents.syncToClient(sp, f);
-                    sp.sendSystemMessage(Component.literal("Commercial Points Daily Income: +" + String.format("%,d$", retail)).withStyle(ChatFormatting.AQUA));
-                }
                 if (f.getTaxDebt() <= 0L) return;
                 if (f.getDebtStage() == 1) {
                     int left = f.getDebtDaysLeft() - 1;

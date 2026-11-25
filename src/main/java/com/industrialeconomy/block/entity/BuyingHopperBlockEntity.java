@@ -27,6 +27,7 @@ public class BuyingHopperBlockEntity extends BlockEntity {
         ServerPlayer nearest = sl.players().stream().min(Comparator.comparingDouble(p -> p.distanceToSqr(pos.getX(), pos.getY(), pos.getZ()))).orElse(null);
         if (nearest == null || nearest.distanceToSqr(pos.getX(), pos.getY(), pos.getZ()) > 256) return;
         CommercialPoint cp = CommercialSavedData.get(sl).getAt(pos);
+        boolean isWarehouse = cp != null && cp.level >= 3 && nearest.getUUID().equals(cp.ownerId);
         nearest.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
             EconomySavedData eco = EconomySavedData.get(sl);
             long earned = 0L;
@@ -37,7 +38,9 @@ public class BuyingHopperBlockEntity extends BlockEntity {
                 if (id == null) continue;
                 MarketItemEntry entry = ItemCatalogManager.getItem(id.toString());
                 if (entry == null || !f.hasPatent(entry.patentId) || !entry.category.equals(cat.name())) continue;
-                long basePay = eco.registerSaleAndGetPayout(id.toString(), st.getCount());
+                int effCount = isWarehouse ? Math.max(1, st.getCount() / 2) : st.getCount();
+                long basePay = eco.registerSaleAndGetPayout(id.toString(), effCount);
+                if (isWarehouse && st.getCount() > effCount) basePay = Math.round(basePay * ((double) st.getCount() / effCount));
                 double bonus = 1.0 + f.getCorpTier().sellBonus + ((cp != null && nearest.getUUID().equals(cp.ownerId)) ? cp.getSellCashback() : 0.0);
                 earned += Math.round(basePay * bonus);
                 ie.discard();

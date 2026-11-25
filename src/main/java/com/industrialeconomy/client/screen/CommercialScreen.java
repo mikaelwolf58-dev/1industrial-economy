@@ -36,9 +36,10 @@ public class CommercialScreen extends AbstractContainerScreen<CommercialMenu> {
         g.drawString(this.font, "Status: " + (!menu.hasOwner ? "FOR SALE" : "Owner: " + menu.ownerName), x + 16, y + 34, !menu.hasOwner ? 0x55FF55 : 0xAAAAAA);
         g.drawString(this.font, "Level: " + menu.level + " / 3" + (menu.level == 3 ? " [WAREHOUSE]" : ""), x + 16, y + 52, 0x55FFFF);
         int cb = menu.level == 1 ? 15 : (menu.level == 2 ? 25 : 40);
-        long passive = Math.round(menu.basePrice * 0.025 * menu.level);
+        double mult = menu.level == 1 ? 1.0 : (menu.level == 2 ? 1.8 : 3.24);
+        long weekly = Math.round(menu.basePrice * 0.07 * mult);
         g.drawString(this.font, "Owner Sell Cashback: +" + cb + "%", x + 16, y + 72, 0x55FF55);
-        g.drawString(this.font, "Daily Retail Income: +" + String.format("%,d$/day", passive), x + 16, y + 88, 0xFFAA00);
+        g.drawString(this.font, "Weekly Retail Income: +" + String.format("%,d$/week", weekly), x + 16, y + 88, 0xFFAA00);
         this.renderTooltip(g, mx, my);
     }
     @Override protected void renderLabels(GuiGraphics g, int mx, int my) {}
