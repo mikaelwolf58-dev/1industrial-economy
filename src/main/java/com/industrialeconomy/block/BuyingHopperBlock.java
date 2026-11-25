@@ -1,5 +1,6 @@
 package com.industrialeconomy.block;
 import com.industrialeconomy.block.entity.BuyingHopperBlockEntity;
+import com.industrialeconomy.commercial.*;
 import com.industrialeconomy.economy.*;
 import com.industrialeconomy.event.FinanceEvents;
 import com.industrialeconomy.finance.PlayerFinanceProvider;
@@ -7,8 +8,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.*;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
@@ -35,18 +35,18 @@ public class BuyingHopperBlock extends BaseEntityBlock {
             ResourceLocation id = ForgeRegistries.ITEMS.getKey(stack.getItem());
             if (id == null) return;
             MarketItemEntry entry = ItemCatalogManager.getItem(id.toString());
-            if (entry == null) return;
-            boolean ok = entry.category.equals(category.name()) || (category == MarketCategory.RARE && entry.category.equals(MarketCategory.EQUIPMENT.name()) && entry.patentId > 0);
-            if (!ok) return;
+            if (entry == null || !entry.category.equals(category.name())) return;
             ServerPlayer nearest = sl.players().stream().min(Comparator.comparingDouble(p -> p.distanceToSqr(pos.getX(), pos.getY(), pos.getZ()))).orElse(null);
             if (nearest == null || nearest.distanceToSqr(pos.getX(), pos.getY(), pos.getZ()) > 256) return;
+            CommercialPoint cp = CommercialSavedData.get(sl).getAt(pos);
             nearest.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
                 if (!f.hasPatent(entry.patentId)) {
-                    if (sl.getGameTime() % 40 == 0) nearest.displayClientMessage(Component.literal("Requires Patent: " + IndustryPatent.byId(entry.patentId).title + " (Buy at ATM)").withStyle(ChatFormatting.RED), true);
+                    if (sl.getGameTime() % 40 == 0) nearest.displayClientMessage(Component.literal("Requires Patent: " + IndustryPatent.byId(entry.patentId).title).withStyle(ChatFormatting.RED), true);
                     return;
                 }
                 long basePay = EconomySavedData.get(sl).registerSaleAndGetPayout(id.toString(), stack.getCount());
-                long totalEarned = Math.round(basePay * (1.0 + f.getCorpTier().sellBonus));
+                double bonus = 1.0 + f.getCorpTier().sellBonus + ((cp != null && nearest.getUUID().equals(cp.ownerId)) ? cp.getSellCashback() : 0.0);
+                long totalEarned = Math.round(basePay * bonus);
                 f.addCash(totalEarned); FinanceEvents.syncToClient(nearest, f);
                 nearest.displayClientMessage(Component.literal("Sold x" + stack.getCount() + " -> +" + String.format("%,d$", totalEarned)).withStyle(ChatFormatting.GREEN), true);
                 itemEntity.discard();
