@@ -4,6 +4,7 @@ import java.util.*;
 public class PlayerFinanceData {
     private long cash = 0L; private long bankBalance = 0L; private int corpLevel = 0;
     private long taxDebt = 0L; private int debtStage = 0; private int debtDaysLeft = 0;
+    private long loanDebt = 0L; private int loanDaysLeft = 0;
     private final Set<Integer> patents = new HashSet<>();
     public long getCash() { return cash; }
     public void setCash(long v) { this.cash = Math.max(0L, v); }
@@ -24,6 +25,10 @@ public class PlayerFinanceData {
     public void setDebtStage(int v) { this.debtStage = v; }
     public int getDebtDaysLeft() { return debtDaysLeft; }
     public void setDebtDaysLeft(int v) { this.debtDaysLeft = Math.max(0, v); }
+    public long getLoanDebt() { return loanDebt; }
+    public void setLoanDebt(long v) { this.loanDebt = Math.max(0L, v); if (this.loanDebt == 0L) this.loanDaysLeft = 0; }
+    public int getLoanDaysLeft() { return loanDaysLeft; }
+    public void setLoanDaysLeft(int v) { this.loanDaysLeft = Math.max(0, v); }
     public boolean hasPatent(int id) { return id <= 0 || patents.contains(id); }
     public void unlockPatent(int id) { if (id > 0) patents.add(id); }
     public int getPatentMask() { int m = 0; for (int i = 1; i <= 5; i++) if (patents.contains(i)) m += (1 << i); return m; }
@@ -31,14 +36,17 @@ public class PlayerFinanceData {
     public void copyFrom(PlayerFinanceData o) {
         this.cash = o.cash; this.bankBalance = o.bankBalance; this.corpLevel = o.corpLevel;
         this.taxDebt = o.taxDebt; this.debtStage = o.debtStage; this.debtDaysLeft = o.debtDaysLeft;
+        this.loanDebt = o.loanDebt; this.loanDaysLeft = o.loanDaysLeft;
         this.patents.clear(); this.patents.addAll(o.patents);
     }
     public void saveNBTData(CompoundTag t) {
         t.putLong("Cash", cash); t.putLong("Bank", bankBalance); t.putInt("Corp", corpLevel);
-        t.putLong("TaxDebt", taxDebt); t.putInt("DebtStage", debtStage); t.putInt("DebtDays", debtDaysLeft); t.putInt("Patents", getPatentMask());
+        t.putLong("TaxDebt", taxDebt); t.putInt("DebtStage", debtStage); t.putInt("DebtDays", debtDaysLeft);
+        t.putLong("LoanDebt", loanDebt); t.putInt("LoanDays", loanDaysLeft); t.putInt("Patents", getPatentMask());
     }
     public void loadNBTData(CompoundTag t) {
         cash = t.getLong("Cash"); bankBalance = t.getLong("Bank"); corpLevel = t.getInt("Corp");
-        taxDebt = t.getLong("TaxDebt"); debtStage = t.getInt("DebtStage"); debtDaysLeft = t.getInt("DebtDays"); setPatentMask(t.getInt("Patents"));
+        taxDebt = t.getLong("TaxDebt"); debtStage = t.getInt("DebtStage"); debtDaysLeft = t.getInt("DebtDays");
+        loanDebt = t.getLong("LoanDebt"); loanDaysLeft = t.getInt("LoanDays"); setPatentMask(t.getInt("Patents"));
     }
 }

@@ -32,6 +32,16 @@ public class TaxBailiffManager {
         PlotSavedData data = PlotSavedData.get(sl);
         for (ServerPlayer sp : sl.players()) {
             sp.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
+                if (f.getLoanDebt() > 0L) {
+                    int ld = f.getLoanDaysLeft() - 1;
+                    if (ld > 0) { f.setLoanDaysLeft(ld); }
+                    else {
+                        long overdue = f.getLoanDebt(); f.setLoanDebt(0L); f.setTaxDebt(f.getTaxDebt() + overdue);
+                        f.setDebtStage(2); f.setDebtDaysLeft(3);
+                        sp.sendSystemMessage(Component.literal("LOAN DEFAULTED (" + String.format("%,d$", overdue) + ")! Transferred to bailiffs (3 days before seizure).").withStyle(ChatFormatting.RED));
+                    }
+                    FinanceEvents.syncToClient(sp, f);
+                }
                 if (f.getTaxDebt() <= 0L) return;
                 if (f.getDebtStage() == 1) {
                     int left = f.getDebtDaysLeft() - 1;
@@ -41,20 +51,13 @@ public class TaxBailiffManager {
                     } else {
                         long seized = Math.min(f.getBankBalance(), f.getTaxDebt());
                         if (seized > 0L) { f.spendBank(seized); f.setTaxDebt(f.getTaxDebt() - seized); }
-                        if (f.getTaxDebt() <= 0L) {
-                            FinanceEvents.syncToClient(sp, f);
-                            sp.sendSystemMessage(Component.literal("Tax debt forcibly settled from bank balance!").withStyle(ChatFormatting.YELLOW));
-                        } else {
-                            f.setDebtStage(2); f.setDebtDaysLeft(3); FinanceEvents.syncToClient(sp, f);
-                            sp.sendSystemMessage(Component.literal("FINAL NOTICE: All bank funds (" + String.format("%,d$", seized) + ") forcibly debited! Remaining debt: " + String.format("%,d$", f.getTaxDebt()) + ". Pay within 3 days or your plot will be seized!").withStyle(ChatFormatting.RED));
-                        }
+                        if (f.getTaxDebt() <= 0L) { FinanceEvents.syncToClient(sp, f); sp.sendSystemMessage(Component.literal("Tax debt forcibly settled from bank balance!").withStyle(ChatFormatting.YELLOW)); }
+                        else { f.setDebtStage(2); f.setDebtDaysLeft(3); FinanceEvents.syncToClient(sp, f); sp.sendSystemMessage(Component.literal("FINAL NOTICE: All bank funds (" + String.format("%,d$", seized) + ") forcibly debited! Remaining debt: " + String.format("%,d$", f.getTaxDebt()) + ". Pay within 3 days or your plot will be seized!").withStyle(ChatFormatting.RED)); }
                     }
                 } else if (f.getDebtStage() == 2) {
                     int left = f.getDebtDaysLeft() - 1;
-                    if (left > 0) {
-                        f.setDebtDaysLeft(left); FinanceEvents.syncToClient(sp, f);
-                        sp.sendSystemMessage(Component.literal("URGENT: Tax debt " + String.format("%,d$", f.getTaxDebt()) + "! Bailiffs arrive in " + left + " day(s).").withStyle(ChatFormatting.RED));
-                    } else executeBailiffSeizure(sl, sp, data, f);
+                    if (left > 0) { f.setDebtDaysLeft(left); FinanceEvents.syncToClient(sp, f); sp.sendSystemMessage(Component.literal("URGENT: Debt " + String.format("%,d$", f.getTaxDebt()) + "! Bailiffs arrive in " + left + " day(s).").withStyle(ChatFormatting.RED)); }
+                    else executeBailiffSeizure(sl, sp, data, f);
                 }
             });
         }
@@ -66,20 +69,17 @@ public class TaxBailiffManager {
         if (owned.size() > 1) {
             IndustrialPlot sm = owned.get(0);
             long credit = Math.round(sm.tier.price * 0.30);
-            clearPlotStructures(sl, sm);
-            sm.ownerId = null; sm.ownerName = null; data.setDirty();
+            clearPlotStructures(sl, sm); sm.ownerId = null; sm.ownerName = null; data.setDirty();
             f.setTaxDebt(Math.max(0L, f.getTaxDebt() - credit));
-            if (f.getTaxDebt() > 0L) {
-                f.setDebtDaysLeft(3);
-                sp.sendSystemMessage(Component.literal("BAILIFFS: Plot #" + sm.id + " (" + sm.tier.size + "x" + sm.tier.size + ") seized for debt! Remaining debt: " + String.format("%,d$", f.getTaxDebt()) + ". Pay within 3 days or next plot/tier will be seized!").withStyle(ChatFormatting.RED));
-            } else sp.sendSystemMessage(Component.literal("BAILIFFS: Plot #" + sm.id + " (" + sm.tier.size + "x" + sm.tier.size + ") seized! Debt settled.").withStyle(ChatFormatting.RED));
+            if (f.getTaxDebt() > 0L) { f.setDebtDaysLeft(3); sp.sendSystemMessage(Component.literal("BAILIFFS: Plot #" + sm.id + " (" + sm.tier.size + "x" + sm.tier.size + ") seized for debt! Remaining: " + String.format("%,d$", f.getTaxDebt()) + ". Pay within 3 days!").withStyle(ChatFormatting.RED)); }
+            else sp.sendSystemMessage(Component.literal("BAILIFFS: Plot #" + sm.id + " (" + sm.tier.size + "x" + sm.tier.size + ") seized! Debt settled.").withStyle(ChatFormatting.RED));
         } else if (f.getCorpLevel() > 0) {
             f.setCorpLevel(f.getCorpLevel() - 1); f.setTaxDebt(0L);
-            sp.sendSystemMessage(Component.literal("BAILIFFS: Corporation level reduced by 1 tier to settle overdue tax debt!").withStyle(ChatFormatting.RED));
+            sp.sendSystemMessage(Component.literal("BAILIFFS: Corporation level reduced by 1 tier to settle overdue debt!").withStyle(ChatFormatting.RED));
         } else {
             if (!owned.isEmpty()) { IndustrialPlot last = owned.get(0); clearPlotStructures(sl, last); last.ownerId = null; last.ownerName = null; data.setDirty(); }
             f.setTaxDebt(0L);
-            sp.sendSystemMessage(Component.literal("BAILIFFS: Your last plot was seized to settle overdue tax debt!").withStyle(ChatFormatting.RED));
+            sp.sendSystemMessage(Component.literal("BAILIFFS: Your last plot was seized to settle overdue debt!").withStyle(ChatFormatting.RED));
         }
         FinanceEvents.syncToClient(sp, f);
     }
