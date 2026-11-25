@@ -1,1 +1,7 @@
-{"parent":"minecraft:block/cube_all","textures":{"all":"industrial_economy:block/hopper_equipment"}}
+{
+  "parent": "minecraft:block/cube_top",
+  "textures": {
+    "top": "industrial_economy:block/hopper_top",
+    "side": "industrial_economy:block/hopper_equipment"
+  }
+}

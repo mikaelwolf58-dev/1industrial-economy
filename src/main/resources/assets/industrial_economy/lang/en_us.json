@@ -3,6 +3,7 @@
   "item.industrial_economy.business_newspaper": "Business Newspaper",
   "block.industrial_economy.bank_terminal": "Bank ATM Terminal",
   "block.industrial_economy.plot_sign": "Industrial Plot Terminal",
+  "block.industrial_economy.commercial_sign": "Commercial Point Terminal",
   "block.industrial_economy.hopper_fuel": "Buyer Hopper: Fuel",
   "block.industrial_economy.hopper_metals": "Buyer Hopper: Metals",
   "block.industrial_economy.hopper_building": "Buyer Hopper: Building",
