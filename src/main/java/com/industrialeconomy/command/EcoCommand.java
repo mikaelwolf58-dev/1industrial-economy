@@ -18,13 +18,18 @@ public class EcoCommand {
             }))))
             .then(Commands.literal("nextday").executes(c -> {
                 ServerLevel sl = c.getSource().getServer().overworld();
+                sl.setDayTime(sl.getDayTime() + 24000L);
                 TaxBailiffManager.tickDaily(sl);
-                c.getSource().sendSuccess(() -> Component.literal("[Test] Simulated +1 Game Day (Taxes & Loans checked)."), true); return 1;
+                if ((sl.getDayTime() / 24000L) % 7L == 0L) FinanceEvents.runWeeklyCycle(sl);
+                for (ServerPlayer sp : sl.players()) sp.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> FinanceEvents.syncToClient(sp, f));
+                c.getSource().sendSuccess(() -> Component.literal("[Test] +1 Day (Day " + (sl.getDayTime() / 24000L) + ")."), true); return 1;
             }))
             .then(Commands.literal("nextweek").executes(c -> {
                 ServerLevel sl = c.getSource().getServer().overworld();
+                sl.setDayTime(sl.getDayTime() + 168000L);
                 FinanceEvents.runWeeklyCycle(sl);
-                c.getSource().sendSuccess(() -> Component.literal("[Test] Simulated +1 Game Week (Weekly Tax & +2% Deposit Interest)."), true); return 1;
+                for (ServerPlayer sp : sl.players()) sp.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> FinanceEvents.syncToClient(sp, f));
+                c.getSource().sendSuccess(() -> Component.literal("[Test] +1 Week (Day " + (sl.getDayTime() / 24000L) + ")."), true); return 1;
             }))
         );
     }

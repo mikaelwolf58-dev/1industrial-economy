@@ -2,6 +2,7 @@ package com.industrialeconomy.event;
 import com.industrialeconomy.IndustrialEconomy;
 import com.industrialeconomy.client.ClientFinanceData;
 import com.industrialeconomy.command.*;
+import com.industrialeconomy.commercial.*;
 import com.industrialeconomy.economy.*;
 import com.industrialeconomy.finance.*;
 import com.industrialeconomy.network.ModMessages;
@@ -12,8 +13,7 @@ import com.industrialeconomy.world.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.*;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -43,48 +43,23 @@ public class FinanceEvents {
     public static void runWeeklyCycle(ServerLevel sl) {
         TaxBailiffManager.assessWeeklyTaxes(sl);
         for (ServerPlayer sp : sl.players()) sp.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
-            if (f.getBankBalance() > 0) {
-                long interest = Math.round(f.getBankBalance() * 0.02);
-                f.addBank(interest); syncToClient(sp, f);
-                sp.sendSystemMessage(Component.literal("Weekly Bank Interest (+2%): +" + String.format("%,d$", interest)).withStyle(ChatFormatting.GOLD));
-            }
+            if (f.getBankBalance() > 0) { long i = Math.round(f.getBankBalance() * 0.02); f.addBank(i); syncToClient(sp, f); sp.sendSystemMessage(Component.literal("Weekly Bank Interest (+2%): +" + String.format("%,d$", i)).withStyle(ChatFormatting.GOLD)); }
         });
     }
-    @SubscribeEvent public static void onAttach(AttachCapabilitiesEvent<Entity> event) {
-        if (event.getObject() instanceof Player && !event.getObject().getCapability(PlayerFinanceProvider.PLAYER_FINANCE).isPresent()) {
-            event.addCapability(new ResourceLocation(IndustrialEconomy.MODID, "finance"), new PlayerFinanceProvider());
-        }
-    }
-    @SubscribeEvent public static void onDeath(LivingDeathEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player) {
-            player.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
-                long lost = f.getCash();
-                if (lost > 0) { f.setCash(0L); player.sendSystemMessage(Component.literal("You died and lost all cash: " + String.format("%,d$", lost)).withStyle(ChatFormatting.RED)); syncToClient(player, f); }
-            });
-        }
-    }
-    @SubscribeEvent public static void onClone(PlayerEvent.Clone event) {
-        if (event.isWasDeath()) {
-            event.getOriginal().reviveCaps();
-            event.getOriginal().getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(o -> event.getEntity().getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(n -> { n.copyFrom(o); n.setCash(0L); }));
-            event.getOriginal().invalidateCaps();
-        }
-    }
-    @SubscribeEvent public static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
-        if (event.getEntity() instanceof ServerPlayer p) {
-            p.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> syncToClient(p, f));
-            if (!p.getTags().contains("ie_got_paper")) { p.addTag("ie_got_paper"); p.getInventory().add(new ItemStack(ModItems.NEWSPAPER.get())); }
-        }
-    }
-    @SubscribeEvent public static void onRespawn(PlayerEvent.PlayerRespawnEvent event) { if (event.getEntity() instanceof ServerPlayer p) p.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> syncToClient(p, f)); }
-    @SubscribeEvent public static void onRegCap(RegisterCapabilitiesEvent event) { event.register(PlayerFinanceData.class); }
+    @SubscribeEvent public static void onAttach(AttachCapabilitiesEvent<Entity> e) { if (e.getObject() instanceof Player && !e.getObject().getCapability(PlayerFinanceProvider.PLAYER_FINANCE).isPresent()) e.addCapability(new ResourceLocation(IndustrialEconomy.MODID, "finance"), new PlayerFinanceProvider()); }
+    @SubscribeEvent public static void onDeath(LivingDeathEvent e) { if (e.getEntity() instanceof ServerPlayer p) p.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> { long l = f.getCash(); if (l > 0) { f.setCash(0L); p.sendSystemMessage(Component.literal("You died and lost all cash: " + String.format("%,d$", l)).withStyle(ChatFormatting.RED)); syncToClient(p, f); } }); }
+    @SubscribeEvent public static void onClone(PlayerEvent.Clone e) { if (e.isWasDeath()) { e.getOriginal().reviveCaps(); e.getOriginal().getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(o -> e.getEntity().getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(n -> { n.copyFrom(o); n.setCash(0L); })); e.getOriginal().invalidateCaps(); } }
+    @SubscribeEvent public static void onLogin(PlayerEvent.PlayerLoggedInEvent e) { if (e.getEntity() instanceof ServerPlayer p) { p.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> syncToClient(p, f)); if (!p.getTags().contains("ie_got_paper")) { p.addTag("ie_got_paper"); p.getInventory().add(new ItemStack(ModItems.NEWSPAPER.get())); } } }
+    @SubscribeEvent public static void onRespawn(PlayerEvent.PlayerRespawnEvent e) { if (e.getEntity() instanceof ServerPlayer p) p.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> syncToClient(p, f)); }
+    @SubscribeEvent public static void onRegCap(RegisterCapabilitiesEvent e) { e.register(PlayerFinanceData.class); }
     public static void syncToClient(ServerPlayer player, PlayerFinanceData f) {
-        ServerLevel sl = player.serverLevel();
-        EconomySavedData eco = EconomySavedData.get(sl);
+        ServerLevel sl = player.serverLevel(); EconomySavedData eco = EconomySavedData.get(sl);
         Map<String, ClientFinanceData.PricePair> prices = new HashMap<>();
-        for (MarketItemEntry e : ItemCatalogManager.getAll()) prices.put(e.itemId, new ClientFinanceData.PricePair(eco.getDynamicBuyPrice(e.itemId), eco.getDynamicSellPrice(e.itemId)));
+        for (MarketItemEntry e : ItemCatalogManager.getAll()) prices.put(e.itemId, new ClientFinanceData.PricePair(eco.getDynamicBuyPrice(e.itemId), eco.getDynamicSellPrice(e.itemId), e.baseBuyPrice, e.baseSellPrice));
         List<ClientFinanceData.HubLine> hubs = new ArrayList<>();
         for (var h : WorldHubSavedData.get(sl).getHubs()) hubs.add(new ClientFinanceData.HubLine(h.type(), h.x(), h.y(), h.z()));
-        ModMessages.sendToPlayer(new SyncFinanceS2CPacket(f.getCash(), f.getBankBalance(), f.getPatentMask(), f.getCorpLevel(), f.getTaxDebt(), f.getLoanDebt(), f.getLoanDaysLeft(), prices, hubs), player);
+        long wTax = 0L; for (IndustrialPlot p : PlotSavedData.get(sl).getAll()) if (player.getUUID().equals(p.ownerId)) wTax += p.getWeeklyTax();
+        long wInc = 0L; for (CommercialPoint cp : CommercialSavedData.get(sl).getAll()) if (player.getUUID().equals(cp.ownerId)) wInc += cp.getWeeklyPassiveIncome();
+        ModMessages.sendToPlayer(new SyncFinanceS2CPacket(f.getCash(), f.getBankBalance(), f.getPatentMask(), f.getCorpLevel(), f.getTaxDebt(), wTax, wInc, sl.getDayTime(), prices, hubs), player);
     }
 }

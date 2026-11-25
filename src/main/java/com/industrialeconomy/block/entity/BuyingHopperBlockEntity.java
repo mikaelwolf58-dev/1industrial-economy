@@ -4,6 +4,7 @@ import com.industrialeconomy.commercial.*;
 import com.industrialeconomy.economy.*;
 import com.industrialeconomy.event.FinanceEvents;
 import com.industrialeconomy.finance.PlayerFinanceProvider;
+import com.industrialeconomy.plot.*;
 import com.industrialeconomy.registry.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
@@ -18,6 +19,18 @@ import net.minecraftforge.registries.ForgeRegistries;
 import java.util.*;
 public class BuyingHopperBlockEntity extends BlockEntity {
     public BuyingHopperBlockEntity(BlockPos p, BlockState s) { super(ModBlockEntities.BUYING_HOPPER_BE.get(), p, s); }
+    public static double getDistanceBonus(ServerLevel sl, UUID ownerId, BlockPos hopperPos) {
+        double minDist = Double.MAX_VALUE;
+        for (IndustrialPlot p : PlotSavedData.get(sl).getAll()) {
+            if (ownerId.equals(p.ownerId)) {
+                double cx = (p.minX + p.maxX) * 0.5; double cz = (p.minZ + p.maxZ) * 0.5;
+                double d = Math.hypot(cx - hopperPos.getX(), cz - hopperPos.getZ());
+                if (d < minDist) minDist = d;
+            }
+        }
+        if (minDist == Double.MAX_VALUE || minDist <= 100.0) return 0.0;
+        return Math.min(0.30, Math.floor((minDist - 100.0) / 50.0) * 0.01);
+    }
     public static void tick(Level level, BlockPos pos, BlockState state, BuyingHopperBlockEntity be) {
         if (level.isClientSide || !(level instanceof ServerLevel sl) || sl.getGameTime() % 10 != 0) return;
         if (!(state.getBlock() instanceof BuyingHopperBlock hb)) return;
@@ -28,6 +41,7 @@ public class BuyingHopperBlockEntity extends BlockEntity {
         if (nearest == null || nearest.distanceToSqr(pos.getX(), pos.getY(), pos.getZ()) > 256) return;
         CommercialPoint cp = CommercialSavedData.get(sl).getAt(pos);
         boolean isWarehouse = cp != null && cp.level >= 3 && nearest.getUUID().equals(cp.ownerId);
+        double distBonus = getDistanceBonus(sl, nearest.getUUID(), pos);
         nearest.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
             EconomySavedData eco = EconomySavedData.get(sl);
             long earned = 0L;
@@ -41,7 +55,7 @@ public class BuyingHopperBlockEntity extends BlockEntity {
                 int effCount = isWarehouse ? Math.max(1, st.getCount() / 2) : st.getCount();
                 long basePay = eco.registerSaleAndGetPayout(id.toString(), effCount);
                 if (isWarehouse && st.getCount() > effCount) basePay = Math.round(basePay * ((double) st.getCount() / effCount));
-                double bonus = 1.0 + f.getCorpTier().sellBonus + ((cp != null && nearest.getUUID().equals(cp.ownerId)) ? cp.getSellCashback() : 0.0);
+                double bonus = 1.0 + f.getCorpTier().sellBonus + distBonus + ((cp != null && nearest.getUUID().equals(cp.ownerId)) ? cp.getSellCashback() : 0.0);
                 earned += Math.round(basePay * bonus);
                 ie.discard();
             }

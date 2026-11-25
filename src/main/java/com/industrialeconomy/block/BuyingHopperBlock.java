@@ -39,13 +39,14 @@ public class BuyingHopperBlock extends BaseEntityBlock {
             ServerPlayer nearest = sl.players().stream().min(Comparator.comparingDouble(p -> p.distanceToSqr(pos.getX(), pos.getY(), pos.getZ()))).orElse(null);
             if (nearest == null || nearest.distanceToSqr(pos.getX(), pos.getY(), pos.getZ()) > 256) return;
             CommercialPoint cp = CommercialSavedData.get(sl).getAt(pos);
+            double distBonus = BuyingHopperBlockEntity.getDistanceBonus(sl, nearest.getUUID(), pos);
             nearest.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
                 if (!f.hasPatent(entry.patentId)) {
                     if (sl.getGameTime() % 40 == 0) nearest.displayClientMessage(Component.literal("Requires Patent: " + IndustryPatent.byId(entry.patentId).title).withStyle(ChatFormatting.RED), true);
                     return;
                 }
                 long basePay = EconomySavedData.get(sl).registerSaleAndGetPayout(id.toString(), stack.getCount());
-                double bonus = 1.0 + f.getCorpTier().sellBonus + ((cp != null && nearest.getUUID().equals(cp.ownerId)) ? cp.getSellCashback() : 0.0);
+                double bonus = 1.0 + f.getCorpTier().sellBonus + distBonus + ((cp != null && nearest.getUUID().equals(cp.ownerId)) ? cp.getSellCashback() : 0.0);
                 long totalEarned = Math.round(basePay * bonus);
                 f.addCash(totalEarned); FinanceEvents.syncToClient(nearest, f);
                 nearest.displayClientMessage(Component.literal("Sold x" + stack.getCount() + " -> +" + String.format("%,d$", totalEarned)).withStyle(ChatFormatting.GREEN), true);
