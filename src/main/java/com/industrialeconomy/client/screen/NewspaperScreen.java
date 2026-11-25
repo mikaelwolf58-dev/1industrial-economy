@@ -22,6 +22,15 @@ public class NewspaperScreen extends Screen {
         for (MarketItemEntry e : ItemCatalogManager.getAll()) if ("ALL".equals(sel) || e.category.equals(sel)) out.add(e);
         return out;
     }
+    @Override public boolean mouseScrolled(double mx, double my, double delta) {
+        if (tab == 0 || tab == 1) {
+            int sz = tab == 0 ? filtered().size() : ClientFinanceData.HUBS.size();
+            int maxPage = Math.max(0, (sz - 1) / 7);
+            if (delta < 0 && page < maxPage) { page++; rebuildButtons(); return true; }
+            if (delta > 0 && page > 0) { page--; rebuildButtons(); return true; }
+        }
+        return super.mouseScrolled(mx, my, delta);
+    }
     private void rebuildButtons() {
         this.clearWidgets();
         int x = (this.width - 310) / 2; int y = (this.height - 225) / 2;
@@ -47,24 +56,19 @@ public class NewspaperScreen extends Screen {
         }
     }
     @Override public void render(GuiGraphics g, int mx, int my, float pt) {
-        this.renderBackground(g);
-        int x = (this.width - 310) / 2; int y = (this.height - 225) / 2;
+        this.renderBackground(g); int x = (this.width - 310) / 2; int y = (this.height - 225) / 2;
         g.fill(x, y, x + 310, y + 225, 0xF01C1B18); g.renderOutline(x, y, 310, 225, 0xFFD4AF37);
-        super.render(g, mx, my, pt);
-        ItemStack hov = ItemStack.EMPTY;
+        super.render(g, mx, my, pt); ItemStack hov = ItemStack.EMPTY;
         if (tab == 0) {
-            var list = filtered(); int start = page * 7;
-            g.drawString(this.font, "Buy / Sell / Trend", x + 165, y + 35, 0xAAAAAA);
+            var list = filtered(); int start = page * 7; g.drawString(this.font, "Buy / Sell / Trend", x + 165, y + 35, 0xAAAAAA);
             for (int i = 0; i < 7 && start + i < list.size(); i++) {
                 MarketItemEntry e = list.get(start + i); int ry = y + 52 + i * 20;
                 Item it = ForgeRegistries.ITEMS.getValue(new ResourceLocation(e.itemId));
                 if (it != null) { ItemStack st = new ItemStack(it); g.renderItem(st, x + 12, ry - 2); if (mx >= x + 12 && mx <= x + 28 && my >= ry - 2 && my <= ry + 14) hov = st; g.drawString(this.font, st.getHoverName().getString(), x + 32, ry + 2, 0xFFFFFF); }
-                var pp = ClientFinanceData.PRICES.get(e.itemId);
-                long buy = pp != null ? pp.buy() : e.baseBuyPrice; long sell = pp != null ? pp.sell() : e.baseSellPrice;
+                var pp = ClientFinanceData.PRICES.get(e.itemId); long buy = pp != null ? pp.buy() : e.baseBuyPrice; long sell = pp != null ? pp.sell() : e.baseSellPrice;
                 int pct = (e.baseSellPrice > 0 && pp != null) ? (int) Math.round(((double)(sell - e.baseSellPrice) / e.baseSellPrice) * 100.0) : 0;
-                String tr = pct > 0 ? ("+" + pct + "%") : (pct < 0 ? (pct + "%") : "0%");
                 g.drawString(this.font, (buy > 0 ? buy + "$" : "-") + " / " + (sell > 0 ? sell + "$" : "-"), x + 165, ry + 2, 0xFFFF55);
-                g.drawString(this.font, tr, x + 266, ry + 2, pct > 0 ? 0x55FF55 : (pct < 0 ? 0xFF5555 : 0xAAAAAA));
+                g.drawString(this.font, pct > 0 ? ("+" + pct + "%") : (pct < 0 ? (pct + "%") : "0%"), x + 266, ry + 2, pct > 0 ? 0x55FF55 : (pct < 0 ? 0xFF5555 : 0xAAAAAA));
             }
         } else if (tab == 1) {
             var pl = Minecraft.getInstance().player; int start = page * 7;

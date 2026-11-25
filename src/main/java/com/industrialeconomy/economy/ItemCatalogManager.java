@@ -17,7 +17,7 @@ public class ItemCatalogManager {
             if (!needWrite) {
                 try (FileReader r = new FileReader(file.toFile())) {
                     List<MarketItemEntry> old = GSON.fromJson(r, new TypeToken<List<MarketItemEntry>>(){}.getType());
-                    if (old == null || old.stream().anyMatch(e -> "create:crushing_wheel".equals(e.itemId) && e.patentId != 4)) needWrite = true;
+                    if (old == null || old.stream().noneMatch(e -> "BOUTIQUE".equals(e.category))) needWrite = true;
                 }
             }
             if (needWrite) {
@@ -32,14 +32,25 @@ public class ItemCatalogManager {
                 }
                 String[] dyes = {"white_dye","red_dye","yellow_dye","blue_dye","green_dye","orange_dye","black_dye","gray_dye"};
                 for (String d : dyes) def.add(new MarketItemEntry("minecraft:" + d, MarketCategory.AGRICULTURE, 14, 6, 0.22, 0));
+                def.add(new MarketItemEntry("minecraft:netherite_helmet", MarketCategory.BOUTIQUE, 150000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:netherite_chestplate", MarketCategory.BOUTIQUE, 240000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:netherite_leggings", MarketCategory.BOUTIQUE, 210000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:netherite_boots", MarketCategory.BOUTIQUE, 150000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:netherite_sword", MarketCategory.BOUTIQUE, 180000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:netherite_pickaxe", MarketCategory.BOUTIQUE, 180000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:netherite_axe", MarketCategory.BOUTIQUE, 170000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:netherite_shovel", MarketCategory.BOUTIQUE, 120000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:bow", MarketCategory.BOUTIQUE, 130000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:trident", MarketCategory.BOUTIQUE, 200000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:elytra", MarketCategory.BOUTIQUE, 350000, 0, 0.0, 0));
                 try (FileWriter w = new FileWriter(file.toFile())) { GSON.toJson(def, w); }
             }
             try (FileReader r = new FileReader(file.toFile())) {
                 List<MarketItemEntry> list = GSON.fromJson(r, new TypeToken<List<MarketItemEntry>>(){}.getType());
                 ITEMS.clear();
-                if (list != null) for (MarketItemEntry e : list) if (e.itemId != null) ITEMS.put(e.itemId, e);
+                if (list != null) for (MarketItemEntry e : list) ITEMS.put(e.itemId, e);
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception ex) { ex.printStackTrace(); }
     }
     public static MarketItemEntry getItem(String id) { return ITEMS.get(id); }
     public static Collection<MarketItemEntry> getAll() { return ITEMS.values(); }
