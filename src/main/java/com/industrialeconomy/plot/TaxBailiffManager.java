@@ -32,16 +32,6 @@ public class TaxBailiffManager {
         PlotSavedData data = PlotSavedData.get(sl);
         for (ServerPlayer sp : sl.players()) {
             sp.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
-                if (f.getLoanDebt() > 0L) {
-                    int ld = f.getLoanDaysLeft() - 1;
-                    if (ld > 0) { f.setLoanDaysLeft(ld); }
-                    else {
-                        long overdue = f.getLoanDebt(); f.setLoanDebt(0L); f.setTaxDebt(f.getTaxDebt() + overdue);
-                        f.setDebtStage(2); f.setDebtDaysLeft(3);
-                        sp.sendSystemMessage(Component.literal("LOAN DEFAULTED (" + String.format("%,d$", overdue) + ")! Transferred to bailiffs (3 days before seizure).").withStyle(ChatFormatting.RED));
-                    }
-                    FinanceEvents.syncToClient(sp, f);
-                }
                 if (f.getTaxDebt() <= 0L) return;
                 if (f.getDebtStage() == 1) {
                     int left = f.getDebtDaysLeft() - 1;

@@ -20,10 +20,9 @@ public class BankTerminalScreen extends AbstractContainerScreen<BankTerminalMenu
     private void rebuildButtons() {
         this.clearWidgets();
         int x = (this.width - this.imageWidth) / 2; int y = (this.height - this.imageHeight) / 2;
-        this.addRenderableWidget(Button.builder(Component.literal("Account"), b -> { tab = 0; rebuildButtons(); }).bounds(x + 8, y + 8, 66, 18).build());
-        this.addRenderableWidget(Button.builder(Component.literal("Patents"), b -> { tab = 1; rebuildButtons(); }).bounds(x + 78, y + 8, 66, 18).build());
-        this.addRenderableWidget(Button.builder(Component.literal("Corp"), b -> { tab = 2; rebuildButtons(); }).bounds(x + 148, y + 8, 66, 18).build());
-        this.addRenderableWidget(Button.builder(Component.literal("Loans"), b -> { tab = 3; rebuildButtons(); }).bounds(x + 218, y + 8, 64, 18).build());
+        this.addRenderableWidget(Button.builder(Component.literal("Account"), b -> { tab = 0; rebuildButtons(); }).bounds(x + 10, y + 8, 86, 18).build());
+        this.addRenderableWidget(Button.builder(Component.literal("Patents"), b -> { tab = 1; rebuildButtons(); }).bounds(x + 102, y + 8, 86, 18).build());
+        this.addRenderableWidget(Button.builder(Component.literal("Corporation"), b -> { tab = 2; rebuildButtons(); }).bounds(x + 194, y + 8, 86, 18).build());
         if (tab == 0) {
             long[] amts = {100L, 1000L, 10000L};
             for (int i = 0; i != 3; i++) {
@@ -44,22 +43,11 @@ public class BankTerminalScreen extends AbstractContainerScreen<BankTerminalMenu
                     this.addRenderableWidget(Button.builder(Component.literal("Buy (" + String.format("%,d$", pat.price) + ")"), b -> ModMessages.sendToServer(new BuyPatentC2SPacket(pat.id))).bounds(x + 178, rowY + 2, 102, 18).build());
                 }
             }
-        } else if (tab == 2) {
+        } else {
             int lvl = ClientFinanceData.getCorpLevel();
             if (lvl < 4) {
                 CorporationTier next = CorporationTier.byLevel(lvl + 1);
                 this.addRenderableWidget(Button.builder(Component.literal("Upgrade (" + String.format("%,d$", next.cost) + ")"), b -> ModMessages.sendToServer(new UpgradeCorpC2SPacket())).bounds(x + 16, y + 170, 258, 22).build());
-            }
-        } else {
-            if (ClientFinanceData.getLoanDebt() <= 0L) {
-                long[] loans = {10000L, 50000L, 250000L};
-                for (int i = 0; i != 3; i++) {
-                    long amt = loans[i];
-                    this.addRenderableWidget(Button.builder(Component.literal("Borrow " + (amt / 1000) + "k$"), b -> ModMessages.sendToServer(new LoanActionC2SPacket(true, amt))).bounds(x + 16 + i * 88, y + 130, 84, 22).build());
-                }
-            } else {
-                this.addRenderableWidget(Button.builder(Component.literal("Pay 10,000$"), b -> ModMessages.sendToServer(new LoanActionC2SPacket(false, 10000L))).bounds(x + 16, y + 130, 122, 22).build());
-                this.addRenderableWidget(Button.builder(Component.literal("Repay Full Loan"), b -> ModMessages.sendToServer(new LoanActionC2SPacket(false, ClientFinanceData.getLoanDebt()))).bounds(x + 148, y + 130, 122, 22).build());
             }
         }
     }
@@ -91,7 +79,7 @@ public class BankTerminalScreen extends AbstractContainerScreen<BankTerminalMenu
                     }
                 }
             }
-        } else if (tab == 2) {
+        } else {
             CorporationTier cur = CorporationTier.byLevel(ClientFinanceData.getCorpLevel());
             g.drawString(this.font, "Status: " + cur.title + " (Lvl " + (cur.level + 1) + "/5)", x + 16, y + 42, 0xFFFF55);
             g.drawString(this.font, "Max Industrial Plots: " + cur.maxPlots, x + 16, y + 60, 0xFFFFFF);
@@ -100,13 +88,6 @@ public class BankTerminalScreen extends AbstractContainerScreen<BankTerminalMenu
                 CorporationTier next = CorporationTier.byLevel(cur.level + 1);
                 g.drawString(this.font, "Next: " + next.title + " (" + next.maxPlots + " plots, +" + (int)(next.sellBonus * 100) + "%)", x + 16, y + 115, 0x55FFFF);
             } else g.drawString(this.font, "Maximum Monopolist Status Reached!", x + 16, y + 115, 0xFFD700);
-        } else {
-            g.drawString(this.font, "Collateral Loan (Max 50% of Owned Plots)", x + 16, y + 40, 0xFFFF55);
-            g.drawString(this.font, "Interest: +10% Fixed | Term: 14 Game Days", x + 16, y + 58, 0xAAAAAA);
-            if (ClientFinanceData.getLoanDebt() > 0L) {
-                g.drawString(this.font, "Active Loan Debt: " + String.format("%,d$", ClientFinanceData.getLoanDebt()), x + 16, y + 84, 0xFF5555);
-                g.drawString(this.font, "Days Remaining: " + ClientFinanceData.getLoanDays(), x + 16, y + 102, 0xFFAA00);
-            } else g.drawString(this.font, "No active loans. Select amount below:", x + 16, y + 90, 0x55FF55);
         }
         if (!hovered.isEmpty()) g.renderTooltip(this.font, hovered, mx, my); else this.renderTooltip(g, mx, my);
     }
