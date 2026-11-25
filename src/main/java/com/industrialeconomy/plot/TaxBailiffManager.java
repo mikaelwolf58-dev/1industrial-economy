@@ -1,4 +1,5 @@
 package com.industrialeconomy.plot;
+import com.industrialeconomy.commercial.*;
 import com.industrialeconomy.event.FinanceEvents;
 import com.industrialeconomy.finance.*;
 import net.minecraft.ChatFormatting;
@@ -30,15 +31,20 @@ public class TaxBailiffManager {
     }
     public static void tickDaily(ServerLevel sl) {
         PlotSavedData data = PlotSavedData.get(sl);
+        CommercialSavedData cData = CommercialSavedData.get(sl);
         for (ServerPlayer sp : sl.players()) {
             sp.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
+                long retail = 0L;
+                for (CommercialPoint cp : cData.getAll()) if (sp.getUUID().equals(cp.ownerId)) retail += cp.getDailyPassiveIncome();
+                if (retail > 0L) {
+                    f.addBank(retail); FinanceEvents.syncToClient(sp, f);
+                    sp.sendSystemMessage(Component.literal("Commercial Points Daily Income: +" + String.format("%,d$", retail)).withStyle(ChatFormatting.AQUA));
+                }
                 if (f.getTaxDebt() <= 0L) return;
                 if (f.getDebtStage() == 1) {
                     int left = f.getDebtDaysLeft() - 1;
-                    if (left > 0) {
-                        f.setDebtDaysLeft(left); FinanceEvents.syncToClient(sp, f);
-                        sp.sendSystemMessage(Component.literal("Tax reminder: " + String.format("%,d$", f.getTaxDebt()) + " due in " + left + " day(s).").withStyle(ChatFormatting.GOLD));
-                    } else {
+                    if (left > 0) { f.setDebtDaysLeft(left); FinanceEvents.syncToClient(sp, f); sp.sendSystemMessage(Component.literal("Tax reminder: " + String.format("%,d$", f.getTaxDebt()) + " due in " + left + " day(s).").withStyle(ChatFormatting.GOLD)); }
+                    else {
                         long seized = Math.min(f.getBankBalance(), f.getTaxDebt());
                         if (seized > 0L) { f.spendBank(seized); f.setTaxDebt(f.getTaxDebt() - seized); }
                         if (f.getTaxDebt() <= 0L) { FinanceEvents.syncToClient(sp, f); sp.sendSystemMessage(Component.literal("Tax debt forcibly settled from bank balance!").withStyle(ChatFormatting.YELLOW)); }
@@ -57,8 +63,7 @@ public class TaxBailiffManager {
         for (IndustrialPlot p : data.getAll()) if (sp.getUUID().equals(p.ownerId)) owned.add(p);
         owned.sort(Comparator.comparingInt(p -> p.tier.size));
         if (owned.size() > 1) {
-            IndustrialPlot sm = owned.get(0);
-            long credit = Math.round(sm.tier.price * 0.30);
+            IndustrialPlot sm = owned.get(0); long credit = Math.round(sm.tier.price * 0.30);
             clearPlotStructures(sl, sm); sm.ownerId = null; sm.ownerName = null; data.setDirty();
             f.setTaxDebt(Math.max(0L, f.getTaxDebt() - credit));
             if (f.getTaxDebt() > 0L) { f.setDebtDaysLeft(3); sp.sendSystemMessage(Component.literal("BAILIFFS: Plot #" + sm.id + " (" + sm.tier.size + "x" + sm.tier.size + ") seized for debt! Remaining: " + String.format("%,d$", f.getTaxDebt()) + ". Pay within 3 days!").withStyle(ChatFormatting.RED)); }

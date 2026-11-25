@@ -13,6 +13,7 @@ public class ModBlocks {
     private static BlockBehaviour.Properties metal() { return BlockBehaviour.Properties.of().strength(3.5f).sound(SoundType.METAL); }
     public static final RegistryObject<Block> ATM_TERMINAL = registerBlock("bank_terminal", () -> new BankTerminalBlock(metal()));
     public static final RegistryObject<Block> PLOT_SIGN = registerBlock("plot_sign", () -> new PlotSignBlock(metal()));
+    public static final RegistryObject<Block> COMMERCIAL_SIGN = registerBlock("commercial_sign", () -> new CommercialSignBlock(metal()));
     public static final RegistryObject<Block> HOPPER_FUEL = registerBlock("hopper_fuel", () -> new BuyingHopperBlock(metal(), MarketCategory.FUEL));
     public static final RegistryObject<Block> HOPPER_METALS = registerBlock("hopper_metals", () -> new BuyingHopperBlock(metal(), MarketCategory.METALS));
     public static final RegistryObject<Block> HOPPER_BUILDING = registerBlock("hopper_building", () -> new BuyingHopperBlock(metal(), MarketCategory.BUILDING));
