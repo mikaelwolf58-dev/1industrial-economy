@@ -17,7 +17,7 @@ public class ItemCatalogManager {
             if (!needWrite) {
                 try (FileReader r = new FileReader(file.toFile())) {
                     List<MarketItemEntry> old = GSON.fromJson(r, new TypeToken<List<MarketItemEntry>>(){}.getType());
-                    if (old == null || old.stream().noneMatch(e -> "BOUTIQUE".equals(e.category) && e.baseBuyPrice >= 450000L)) needWrite = true;
+                    if (old == null || old.stream().noneMatch(e -> "minecraft:diamond_chestplate".equals(e.itemId) && "BOUTIQUE".equals(e.category))) needWrite = true;
                 }
             }
             if (needWrite) {
@@ -32,17 +32,33 @@ public class ItemCatalogManager {
                 }
                 String[] dyes = {"white_dye","red_dye","yellow_dye","blue_dye","green_dye","orange_dye","black_dye","gray_dye"};
                 for (String d : dyes) def.add(new MarketItemEntry("minecraft:" + d, MarketCategory.AGRICULTURE, 14, 6, 0.22, 0));
-                def.add(new MarketItemEntry("minecraft:netherite_helmet", MarketCategory.BOUTIQUE, 195000, 0, 0.0, 0));
-                def.add(new MarketItemEntry("minecraft:netherite_chestplate", MarketCategory.BOUTIQUE, 312000, 0, 0.0, 0));
-                def.add(new MarketItemEntry("minecraft:netherite_leggings", MarketCategory.BOUTIQUE, 273000, 0, 0.0, 0));
-                def.add(new MarketItemEntry("minecraft:netherite_boots", MarketCategory.BOUTIQUE, 195000, 0, 0.0, 0));
-                def.add(new MarketItemEntry("minecraft:netherite_sword", MarketCategory.BOUTIQUE, 234000, 0, 0.0, 0));
-                def.add(new MarketItemEntry("minecraft:netherite_pickaxe", MarketCategory.BOUTIQUE, 234000, 0, 0.0, 0));
-                def.add(new MarketItemEntry("minecraft:netherite_axe", MarketCategory.BOUTIQUE, 221000, 0, 0.0, 0));
-                def.add(new MarketItemEntry("minecraft:netherite_shovel", MarketCategory.BOUTIQUE, 156000, 0, 0.0, 0));
-                def.add(new MarketItemEntry("minecraft:bow", MarketCategory.BOUTIQUE, 169000, 0, 0.0, 0));
-                def.add(new MarketItemEntry("minecraft:trident", MarketCategory.BOUTIQUE, 260000, 0, 0.0, 0));
-                def.add(new MarketItemEntry("minecraft:elytra", MarketCategory.BOUTIQUE, 455000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:iron_helmet", MarketCategory.BOUTIQUE, 3500, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:iron_chestplate", MarketCategory.BOUTIQUE, 6500, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:iron_leggings", MarketCategory.BOUTIQUE, 5000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:iron_boots", MarketCategory.BOUTIQUE, 3500, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:iron_sword", MarketCategory.BOUTIQUE, 4000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:iron_pickaxe", MarketCategory.BOUTIQUE, 4000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:iron_axe", MarketCategory.BOUTIQUE, 4000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:iron_shovel", MarketCategory.BOUTIQUE, 2500, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:diamond_helmet", MarketCategory.BOUTIQUE, 28000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:diamond_chestplate", MarketCategory.BOUTIQUE, 52000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:diamond_leggings", MarketCategory.BOUTIQUE, 42000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:diamond_boots", MarketCategory.BOUTIQUE, 28000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:diamond_sword", MarketCategory.BOUTIQUE, 35000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:diamond_pickaxe", MarketCategory.BOUTIQUE, 35000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:diamond_axe", MarketCategory.BOUTIQUE, 35000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:diamond_shovel", MarketCategory.BOUTIQUE, 22000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:netherite_helmet", MarketCategory.BOUTIQUE, 135000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:netherite_chestplate", MarketCategory.BOUTIQUE, 220000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:netherite_leggings", MarketCategory.BOUTIQUE, 190000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:netherite_boots", MarketCategory.BOUTIQUE, 135000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:netherite_sword", MarketCategory.BOUTIQUE, 165000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:netherite_pickaxe", MarketCategory.BOUTIQUE, 165000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:netherite_axe", MarketCategory.BOUTIQUE, 155000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:netherite_shovel", MarketCategory.BOUTIQUE, 110000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:bow", MarketCategory.BOUTIQUE, 120000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:trident", MarketCategory.BOUTIQUE, 180000, 0, 0.0, 0));
+                def.add(new MarketItemEntry("minecraft:elytra", MarketCategory.BOUTIQUE, 320000, 0, 0.0, 0));
                 try (FileWriter w = new FileWriter(file.toFile())) { GSON.toJson(def, w); }
             }
             try (FileReader r = new FileReader(file.toFile())) {
