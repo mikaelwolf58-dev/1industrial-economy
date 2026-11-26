@@ -3,10 +3,12 @@ import com.industrialeconomy.economy.*;
 import com.industrialeconomy.event.FinanceEvents;
 import com.industrialeconomy.finance.PlayerFinanceProvider;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.*;
+import net.minecraft.world.Container;
 import net.minecraft.world.item.*;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -24,7 +26,7 @@ public class BuyItemC2SPacket {
                 if (lot.id().equals(itemId)) {
                     sp.getCapability(PlayerFinanceProvider.PLAYER_FINANCE).ifPresent(f -> {
                         if (!f.spendCash(lot.price()) && !f.spendBank(lot.price())) { sp.sendSystemMessage(Component.literal("Not enough funds (" + String.format("%,d$", lot.price()) + ")!").withStyle(ChatFormatting.RED)); return; }
-                        ItemStack give = lot.stack().copy(); if (!sp.getInventory().add(give)) sp.drop(give, false);
+                        deliverToChestOrPlayer(sl, sp, lot.stack().copy());
                         FinanceEvents.syncToClient(sp, f); sp.sendSystemMessage(Component.literal("Purchased Limited Lot: " + lot.title()).withStyle(ChatFormatting.LIGHT_PURPLE));
                     }); return;
                 }
@@ -35,12 +37,36 @@ public class BuyItemC2SPacket {
                 if (!f.spendCash(total) && !f.spendBank(total)) { sp.sendSystemMessage(Component.literal("Not enough funds (" + String.format("%,d$", total) + ")!").withStyle(ChatFormatting.RED)); return; }
                 Item it = ForgeRegistries.ITEMS.getValue(new ResourceLocation(itemId));
                 if (it != null) {
-                    ItemStack st = new ItemStack(it, count);
-                    if ("BOUTIQUE".equals(entry.category)) BoutiqueRotationManager.applyStandardBoutiqueEnchants(st);
-                    if (!sp.getInventory().add(st)) sp.drop(st, false);
+                    int rem = count;
+                    while (rem > 0) {
+                        int batch = Math.min(rem, it.getMaxStackSize());
+                        ItemStack st = new ItemStack(it, batch);
+                        if ("BOUTIQUE".equals(entry.category)) BoutiqueRotationManager.applyStandardBoutiqueEnchants(st);
+                        deliverToChestOrPlayer(sl, sp, st);
+                        rem -= batch;
+                    }
                 }
+                eco.registerPurchase(itemId, count);
                 FinanceEvents.syncToClient(sp, f);
             });
         }); return true;
+    }
+    private static void deliverToChestOrPlayer(ServerLevel sl, ServerPlayer sp, ItemStack stack) {
+        BlockPos center = sp.blockPosition();
+        for (int dx = -10; dx <= 10; dx++) for (int dy = -4; dy <= 5; dy++) for (int dz = -10; dz <= 10; dz++) {
+            if (stack.isEmpty()) return;
+            if (sl.getBlockEntity(center.offset(dx, dy, dz)) instanceof Container cont) {
+                for (int slot = 0; slot < cont.getContainerSize(); slot++) {
+                    if (stack.isEmpty()) break;
+                    ItemStack ex = cont.getItem(slot);
+                    if (ex.isEmpty()) { cont.setItem(slot, stack.copy()); stack.setCount(0); cont.setChanged(); }
+                    else if (ItemStack.isSameItemSameTags(ex, stack) && ex.getCount() < ex.getMaxStackSize()) {
+                        int add = Math.min(stack.getCount(), ex.getMaxStackSize() - ex.getCount());
+                        ex.grow(add); stack.shrink(add); cont.setChanged();
+                    }
+                }
+            }
+        }
+        if (!stack.isEmpty() && !sp.getInventory().add(stack)) sp.drop(stack, false);
     }
 }
