@@ -59,7 +59,6 @@ public class WorldInfrastructureGenerator {
         CommercialSavedData cd = CommercialSavedData.get(l);
         CommercialPoint cp = new CommercialPoint(String.valueOf(cd.nextNumber()), title, cat, o, rot);
         cd.addPoint(cp);
-        l.setBlock(o.offset(-1, 0, -1), ModBlocks.COMMERCIAL_SIGN.get().defaultBlockState(), 3);
         d.addHub(hub, o.offset(8, 0, 8), 8);
     }
 }
