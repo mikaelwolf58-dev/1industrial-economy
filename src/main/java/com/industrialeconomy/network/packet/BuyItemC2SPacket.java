@@ -46,7 +46,6 @@ public class BuyItemC2SPacket {
                         rem -= batch;
                     }
                 }
-                eco.registerPurchase(itemId, count);
                 FinanceEvents.syncToClient(sp, f);
             });
         }); return true;
