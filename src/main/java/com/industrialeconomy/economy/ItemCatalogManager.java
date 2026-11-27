@@ -17,7 +17,7 @@ public class ItemCatalogManager {
             if (!needWrite) {
                 try (FileReader r = new FileReader(file.toFile())) {
                     List<MarketItemEntry> old = GSON.fromJson(r, new TypeToken<List<MarketItemEntry>>(){}.getType());
-                    if (old == null || old.stream().noneMatch(e -> "minecraft:diamond_chestplate".equals(e.itemId) && "BOUTIQUE".equals(e.category))) needWrite = true;
+                    if (old == null || old.stream().noneMatch(e -> "minecraft:dirt".equals(e.itemId))) needWrite = true;
                 }
             }
             if (needWrite) {
@@ -28,8 +28,11 @@ public class ItemCatalogManager {
                     if ("create:crimsite".equals(m.itemId)) { m.baseBuyPrice = 8L; m.baseSellPrice = 4L; }
                     if ("create:ochrum".equals(m.itemId) || "create:veridium".equals(m.itemId)) { m.baseBuyPrice = 10L; m.baseSellPrice = 5L; }
                     if ("create:crushing_wheel".equals(m.itemId)) { m.baseBuyPrice = 9000L; m.baseSellPrice = 650L; }
+                    if ("minecraft:egg".equals(m.itemId)) { m.category = MarketCategory.FOOD.name(); m.baseBuyPrice = 12L; m.baseSellPrice = 5L; }
                     if ("EQUIPMENT".equals(m.category) && m.patentId == 0 && m.baseBuyPrice >= 800L) m.patentId = 4;
                 }
+                if (def.stream().noneMatch(e -> "minecraft:egg".equals(e.itemId))) def.add(new MarketItemEntry("minecraft:egg", MarketCategory.FOOD, 12, 5, 0.25, 0));
+                def.add(new MarketItemEntry("minecraft:dirt", MarketCategory.BUILDING, 6, 1, 0.20, 0));
                 String[] dyes = {"white_dye","red_dye","yellow_dye","blue_dye","green_dye","orange_dye","black_dye","gray_dye"};
                 for (String d : dyes) def.add(new MarketItemEntry("minecraft:" + d, MarketCategory.AGRICULTURE, 14, 6, 0.22, 0));
                 def.add(new MarketItemEntry("minecraft:iron_helmet", MarketCategory.BOUTIQUE, 3500, 0, 0.0, 0));
